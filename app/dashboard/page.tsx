@@ -1,11 +1,10 @@
-import { auth } from "../../lib/auth";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminDashboard } from "../../components/dashboard/admin-dashboard";
 import { GuruDashboard } from "../../components/dashboard/guru-dashboard";
 import { getGuruDashboardData } from "../actions/dashboard/guru";
 import { getAdminDashboardData } from "../actions/dashboard/admin";
 import { getUserKelasList } from "../actions/kelas";
+import { getSessionCached } from "../../lib/auth-actions";
 
 type UserRoles = "GURU" | "MURID" | "ADMIN";
 
@@ -17,9 +16,7 @@ interface DashboardUser {
 }
 
 export default async function DashboardPage() {
-  const session = await auth.api.getSession({
-    headers: await headers()
-  });
+  const session = await getSessionCached();
 
   // Session is guaranteed to exist due to middleware protection
   const user = session!.user as DashboardUser;

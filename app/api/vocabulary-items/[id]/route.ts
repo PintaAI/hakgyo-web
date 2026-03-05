@@ -40,12 +40,16 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
                 image: true
               }
             },
-            kelas: {
+            kelasVocabularySets: {
               select: {
-                id: true,
-                title: true,
-                type: true,
-                level: true
+                kelas: {
+                  select: {
+                    id: true,
+                    title: true,
+                    type: true,
+                    level: true
+                  }
+                }
               }
             }
           }

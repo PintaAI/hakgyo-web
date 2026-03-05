@@ -18,11 +18,16 @@ interface VocabSet {
     id: string;
     name: string | null;
   } | null;
-  kelas: {
+  kelasVocabularySets: Array<{
     id: number;
-    title: string;
-    level: string;
-  } | null;
+    kelasId: number;
+    order: number;
+    kelas: {
+      id: number;
+      title: string;
+      level: string;
+    };
+  }>;
   items: Array<{
     id: number;
     korean: string;

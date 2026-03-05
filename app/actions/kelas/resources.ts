@@ -9,26 +9,38 @@ export async function linkVocabularyToKelas(kelasId: number, vocabSetIds: number
     const session = await assertAuthenticated();
     
     // Verify kelas ownership
-    const kelas = await prisma.kelas.findUnique({ 
-      where: { id: kelasId }, 
-      select: { authorId: true } 
+    const kelas = await prisma.kelas.findUnique({
+      where: { id: kelasId },
+      select: { authorId: true }
     });
     
     if (!kelas || kelas.authorId !== session.user.id) {
       return { success: false, error: 'Not authorized' };
     }
 
-    // Update vocabulary sets to link to this kelas
-    await prisma.vocabularySet.updateMany({
-      where: { 
-        id: { in: vocabSetIds },
-        OR: [
-          { userId: session.user.id },
-          { kelasId: null } // Allow linking unlinked sets
-        ]
-      },
-      data: { kelasId: kelasId }
+    // Create KelasVocabularySet links for each vocabulary set
+    const linkPromises = vocabSetIds.map(async (vocabSetId, index) => {
+      // Check if link already exists
+      const existingLink = await prisma.kelasVocabularySet.findFirst({
+        where: {
+          kelasId: kelasId,
+          vocabularySetId: vocabSetId
+        }
+      });
+
+      if (!existingLink) {
+        return prisma.kelasVocabularySet.create({
+          data: {
+            kelasId: kelasId,
+            vocabularySetId: vocabSetId,
+            order: index
+          }
+        });
+      }
+      return existingLink;
     });
+
+    await Promise.all(linkPromises);
 
     return { success: true, message: 'Vocabulary sets linked successfully' };
   } catch (error) {
@@ -42,23 +54,21 @@ export async function unlinkVocabularyFromKelas(kelasId: number, vocabSetIds: nu
     const session = await assertAuthenticated();
     
     // Verify kelas ownership
-    const kelas = await prisma.kelas.findUnique({ 
-      where: { id: kelasId }, 
-      select: { authorId: true } 
+    const kelas = await prisma.kelas.findUnique({
+      where: { id: kelasId },
+      select: { authorId: true }
     });
     
     if (!kelas || kelas.authorId !== session.user.id) {
       return { success: false, error: 'Not authorized' };
     }
 
-    // Unlink vocabulary sets from this kelas
-    await prisma.vocabularySet.updateMany({
-      where: { 
-        id: { in: vocabSetIds },
+    // Delete KelasVocabularySet links
+    await prisma.kelasVocabularySet.deleteMany({
+      where: {
         kelasId: kelasId,
-        userId: session.user.id
-      },
-      data: { kelasId: null }
+        vocabularySetId: { in: vocabSetIds }
+      }
     });
 
     return { success: true, message: 'Vocabulary sets unlinked successfully' };
@@ -152,15 +162,20 @@ export async function getKelasResources(kelasId: number) {
     const kelas = await prisma.kelas.findUnique({
       where: { id: kelasId },
       include: {
-        vocabularySets: {
+        kelasVocabularySets: {
           include: {
-            items: {
-              orderBy: { order: 'asc' }
-            },
-            user: {
-              select: { id: true, name: true }
+            vocabularySet: {
+              include: {
+                items: {
+                  orderBy: { order: 'asc' }
+                },
+                user: {
+                  select: { id: true, name: true }
+                }
+              }
             }
-          }
+          },
+          orderBy: { order: 'asc' }
         },
         kelasKoleksiSoals: {
           include: {
@@ -200,10 +215,10 @@ export async function getKelasResources(kelasId: number) {
       }
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: {
-        vocabularySets: kelas.vocabularySets,
+        vocabularySets: kelas.kelasVocabularySets.map(kvs => kvs.vocabularySet),
         soalSets: kelas.kelasKoleksiSoals
       }
     };

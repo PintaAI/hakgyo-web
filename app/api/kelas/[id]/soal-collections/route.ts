@@ -20,7 +20,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid kelas ID' }, { status: 400 });
     }
 
-    console.log('Getting soal collections for kelasId:', kelasId, 'userId:', session.user.id);
+    // console.log('Getting soal collections for kelasId:', kelasId, 'userId:', session.user.id);
 
     // Check if user is author or admin
     if (session.user.role !== 'GURU' && session.user.role !== 'ADMIN') {
@@ -66,7 +66,7 @@ export async function GET(
       }
     });
 
-    console.log('Found soal collections:', soalCollections.length, 'collections');
+    // console.log('Found soal collections:', soalCollections.length, 'collections');
 
     return NextResponse.json({
       success: true,

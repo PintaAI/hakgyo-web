@@ -151,7 +151,7 @@ export const createResources: StateCreator<
         set((state) => {
           state.resources.connectedVocabSets = (result.data.vocabularySets as any[]).map(vs => ({
             ...vs,
-            kelas: vs.kelas || null,
+            kelasVocabularySets: vs.kelasVocabularySets || [],
             user: vs.user || null,
           })) as VocabularySet[];
 

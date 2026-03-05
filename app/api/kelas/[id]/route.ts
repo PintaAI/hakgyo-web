@@ -74,7 +74,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
             materis: true,
             members: true,
             completions: true,
-            vocabularySets: true,
+            kelasVocabularySets: true,
             kelasKoleksiSoals: {
               where: {
                 koleksiSoal: {

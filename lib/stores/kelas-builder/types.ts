@@ -47,18 +47,22 @@ export interface VocabularySet {
   isPublic: boolean;
   isDraft: boolean;
   userId: string | null;
-  kelasId: number | null;
   items: Array<{
     id: number;
     korean: string;
     indonesian: string;
     type: string;
   }>;
-  kelas: {
+  kelasVocabularySets: Array<{
     id: number;
-    title: string;
-    level: string;
-  } | null;
+    kelasId: number;
+    order: number;
+    kelas: {
+      id: number;
+      title: string;
+      level: string;
+    };
+  }>;
   user: {
     id: string;
     name: string | null;

@@ -48,10 +48,10 @@ export async function POST(request: NextRequest) {
           },
         });
       } else {
-        // Token belongs to another user, create a new one
-        expoPushToken = await prisma.expoPushToken.create({
+        // Token belongs to another user — reassign it to the current user
+        expoPushToken = await prisma.expoPushToken.update({
+          where: { id: existingToken.id },
           data: {
-            pushToken,
             userId: session.user.id,
             deviceId,
             deviceType,

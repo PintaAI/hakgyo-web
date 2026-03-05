@@ -57,9 +57,37 @@ import { tryoutApi } from '@hakgyo-expo-sdk';
 // List all active tryouts
 const activeTryouts = await tryoutApi.listActive();
 
-// The SDK's listActive() method filters for active tryouts
-// For more filtering options, use the API directly via apiClient
+// List tryouts from user's joined kelas only (active only)
+const myKelasTryouts = await tryoutApi.listMyKelas();
+
+// List with custom filters
+const filteredTryouts = await tryoutApi.list({
+  guruId: 'user123',
+  koleksiSoalId: 456,
+  isActive: true,
+  limit: 10,
+  userjoinedkelas: true  // Filter by user's joined kelas
+});
 ```
+
+#### List Methods Reference
+
+| Method | Description | Auth Required |
+|--------|-------------|---------------|
+| `list(params?)` | List tryouts with optional filters | No (unless `userjoinedkelas=true`) |
+| `listActive()` | List only active tryouts | No |
+| `listMyKelas()` | List active tryouts from user's joined kelas | Yes |
+
+#### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `guruId` | string | Filter by teacher/creator ID |
+| `koleksiSoalId` | number | Filter by question collection ID |
+| `kelasId` | number | Filter by class ID |
+| `isActive` | boolean | Filter by active status |
+| `limit` | number | Limit number of results |
+| `userjoinedkelas` | boolean | Filter by user's joined kelas (requires auth) |
 
 ### Get Tryout Details
 

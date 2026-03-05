@@ -3,7 +3,7 @@
 import {  MessageSquare, GraduationCap, Megaphone, FileText, BookOpen, Brain, BarChart3 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { KelasType, Difficulty } from "@prisma/client";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/components/session-provider";
 import { useKelasEnrollment } from "@/hooks/use-kelas-enrollment";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,11 +61,16 @@ interface VocabSet {
     id: string;
     name: string | null;
   } | null;
-  kelas: {
+  kelasVocabularySets: Array<{
     id: number;
-    title: string;
-    level: string;
-  } | null;
+    kelasId: number;
+    order: number;
+    kelas: {
+      id: number;
+      title: string;
+      level: string;
+    };
+  }>;
   items: Array<{
     id: number;
     korean: string;
@@ -142,7 +147,7 @@ interface Kelas {
     members: number;
     materis: number;
     liveSessions: number;
-    vocabularySets: number;
+    kelasVocabularySets: number;
     posts: number;
     kelasKoleksiSoals: number;
   };
@@ -263,7 +268,7 @@ export default function KelasDetailPage({ kelas }: KelasDetailPageProps) {
                 members: kelas._count.members,
                 materis: kelas._count.materis,
                 kelasKoleksiSoals: kelas._count.kelasKoleksiSoals,
-                vocabularySets: kelas._count.vocabularySets,
+                vocabularySets: kelas._count.kelasVocabularySets,
               }}
             />
 

@@ -68,26 +68,26 @@ export async function GET(
     let completedCount = 0;
     const totalCount = materis.length;
 
-    console.log('\n=== PROCESSING MATERIS ===');
-    console.log('Total materis:', materis.length);
+    // console.log('\n=== PROCESSING MATERIS ===');
+    // console.log('Total materis:', materis.length);
     
     for (let i = 0; i < materis.length; i++) {
       const materi = materis[i];
       const completion = materi.completions[0];
       const assessment = materi.assessments[0];
       
-      console.log(`\n--- Processing Material ${materi.order} (ID: ${materi.id}) ---`);
-      console.log('Title:', materi.title);
-      console.log('Has passingScore:', !!materi.passingScore, 'Value:', materi.passingScore);
-      console.log('Completion record exists:', !!completion);
-      if (completion) {
-        console.log('Completion details:', {
-          isCompleted: completion.isCompleted,
-          assessmentPassed: completion.assessmentPassed,
-          userId: completion.userId,
-          materiId: completion.materiId
-        });
-      }
+      // console.log(`\n--- Processing Material ${materi.order} (ID: ${materi.id}) ---`);
+      // console.log('Title:', materi.title);
+      // console.log('Has passingScore:', !!materi.passingScore, 'Value:', materi.passingScore);
+      // console.log('Completion record exists:', !!completion);
+      // if (completion) {
+      //   console.log('Completion details:', {
+      //     isCompleted: completion.isCompleted,
+      //     assessmentPassed: completion.assessmentPassed,
+      //     userId: completion.userId,
+      //     materiId: completion.materiId
+      //   });
+      // }
       
       // Determine if materi is accessible
       let isAccessible = false;
@@ -95,27 +95,27 @@ export async function GET(
       if (i === 0) {
         // First materi is always accessible
         isAccessible = true;
-        console.log(`[Material ${materi.order}] First material - always accessible`);
+        // console.log(`[Material ${materi.order}] First material - always accessible`);
       } else {
         // Check if previous materi is fully completed
         const previousMateri = materis[i - 1];
         const previousCompletion = previousMateri?.completions[0];
         
-        console.log(`\n  >> Checking if Material ${materi.order} should be accessible:`);
-        console.log('  >> Previous Material:', {
-          order: previousMateri.order,
-          id: previousMateri.id,
-          title: previousMateri.title,
-          hasAssessment: !!previousMateri.passingScore,
-          passingScore: previousMateri.passingScore
-        });
-        console.log('  >> Previous Completion Record:', previousCompletion ? {
-          exists: true,
-          isCompleted: previousCompletion.isCompleted,
-          assessmentPassed: previousCompletion.assessmentPassed,
-          materiId: previousCompletion.materiId,
-          userId: previousCompletion.userId
-        } : { exists: false });
+        // console.log(`\n  >> Checking if Material ${materi.order} should be accessible:`);
+        // console.log('  >> Previous Material:', {
+        //   order: previousMateri.order,
+        //   id: previousMateri.id,
+        //   title: previousMateri.title,
+        //   hasAssessment: !!previousMateri.passingScore,
+        //   passingScore: previousMateri.passingScore
+        // });
+        // console.log('  >> Previous Completion Record:', previousCompletion ? {
+        //   exists: true,
+        //   isCompleted: previousCompletion.isCompleted,
+        //   assessmentPassed: previousCompletion.assessmentPassed,
+        //   materiId: previousCompletion.materiId,
+        //   userId: previousCompletion.userId
+        // } : { exists: false });
         
         // Determine if previous material is fully completed
         let previousIsFullyCompleted = false;
@@ -124,24 +124,24 @@ export async function GET(
           // Previous material has assessment - check if user passed it
           const hasPassed = previousCompletion?.assessmentPassed === true;
           previousIsFullyCompleted = hasPassed;
-          console.log(`  >> Previous HAS assessment (passingScore: ${previousMateri.passingScore})`);
-          console.log(`  >> assessmentPassed value:`, previousCompletion?.assessmentPassed, `(type: ${typeof previousCompletion?.assessmentPassed})`);
-          console.log(`  >> Previous is fully completed:`, previousIsFullyCompleted);
+          // console.log(`  >> Previous HAS assessment (passingScore: ${previousMateri.passingScore})`);
+          // console.log(`  >> assessmentPassed value:`, previousCompletion?.assessmentPassed, `(type: ${typeof previousCompletion?.assessmentPassed})`);
+          // console.log(`  >> Previous is fully completed:`, previousIsFullyCompleted);
         } else {
           // Previous material has no assessment - check content completion
           const isContentComplete = previousCompletion?.isCompleted === true;
           previousIsFullyCompleted = isContentComplete;
-          console.log(`  >> Previous NO assessment`);
-          console.log(`  >> isCompleted value:`, previousCompletion?.isCompleted, `(type: ${typeof previousCompletion?.isCompleted})`);
-          console.log(`  >> Previous is fully completed:`, previousIsFullyCompleted);
+          // console.log(`  >> Previous NO assessment`);
+          // console.log(`  >> isCompleted value:`, previousCompletion?.isCompleted, `(type: ${typeof previousCompletion?.isCompleted})`);
+          // console.log(`  >> Previous is fully completed:`, previousIsFullyCompleted);
         }
         
         if (previousIsFullyCompleted) {
           isAccessible = true;
-          console.log(`  >> ✓ Setting Material ${materi.order} accessible to TRUE`);
+          // console.log(`  >> ✓ Setting Material ${materi.order} accessible to TRUE`);
         } else {
           isAccessible = false;
-          console.log(`  >> ✗ Setting Material ${materi.order} accessible to FALSE - previous not fully completed`);
+          // console.log(`  >> ✗ Setting Material ${materi.order} accessible to FALSE - previous not fully completed`);
         }
       }
       
@@ -181,10 +181,10 @@ export async function GET(
       });
     }
     
-    console.log('\n=== FINAL PROCESSED MATERIS ===');
-    processedMateris.forEach(m => {
-      console.log(`Material ${m.order}: isAccessible=${m.isAccessible}, isCompleted=${m.isCompleted}, isFullyCompleted=${m.isFullyCompleted}`);
-    });
+    // console.log('\n=== FINAL PROCESSED MATERIS ===');
+    // processedMateris.forEach(m => {
+    //   console.log(`Material ${m.order}: isAccessible=${m.isAccessible}, isCompleted=${m.isCompleted}, isFullyCompleted=${m.isFullyCompleted}`);
+    // });
 
     const overallProgress = {
       completedCount,

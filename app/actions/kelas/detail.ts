@@ -99,7 +99,7 @@ export async function getKelasDetail(id: string) {
             materis: true,
             members: true,
             liveSessions: true,
-            vocabularySets: true,
+            kelasVocabularySets: true,
             posts: true,
             kelasKoleksiSoals: true,
           },
@@ -168,42 +168,50 @@ export async function getKelasDetail(id: string) {
       liveSessions = liveSessionData;
 
       // Fetch vocabulary sets
-      const vocabData = await prisma.vocabularySet.findMany({
+      const vocabData = await prisma.kelasVocabularySet.findMany({
         where: {
           kelasId: kelasId,
-          isPublic: true,
         },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          icon: true,
-          isPublic: true,
-          createdAt: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          kelas: {
+        include: {
+          vocabularySet: {
             select: {
               id: true,
               title: true,
-              level: true,
-            },
-          },
-          items: {
-            select: {
-              id: true,
-              korean: true,
-              indonesian: true,
-              type: true,
+              description: true,
+              icon: true,
+              isPublic: true,
+              createdAt: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              items: {
+                select: {
+                  id: true,
+                  korean: true,
+                  indonesian: true,
+                  type: true,
+                },
+              },
             },
           },
         },
+        orderBy: {
+          order: 'asc',
+        },
       });
-      vocabularySets = vocabData;
+      vocabularySets = vocabData.map(kvs => ({
+        ...kvs.vocabularySet,
+        kelasVocabularySets: [{
+          kelas: {
+            id: kelas.id,
+            title: kelas.title,
+            level: kelas.level,
+          },
+        }],
+      }));
 
       // Fetch soal sets
       const soalData = await prisma.kelasKoleksiSoal.findMany({
@@ -525,7 +533,11 @@ export async function getVocabDetail(vocabId: string, kelasId: string) {
     const vocabSet = await prisma.vocabularySet.findFirst({
       where: {
         id: vocabIdNum,
-        kelasId: kelasIdNum,
+        kelasVocabularySets: {
+          some: {
+            kelasId: kelasIdNum
+          }
+        }
       },
       select: {
         id: true,
@@ -540,13 +552,17 @@ export async function getVocabDetail(vocabId: string, kelasId: string) {
             name: true,
           },
         },
-        kelas: {
-          select: {
-            id: true,
-            title: true,
-            level: true,
-            thumbnail: true,
-          },
+        kelasVocabularySets: {
+          include: {
+            kelas: {
+              select: {
+                id: true,
+                title: true,
+                level: true,
+                thumbnail: true,
+              },
+            }
+          }
         },
         items: {
           select: {

@@ -1,6 +1,7 @@
 import { getKelasDetail } from "@/app/actions/kelas/detail";
 import KelasDetailPage from "@/components/kelas/kelas-detail-page";
 import { notFound } from "next/navigation";
+import { SessionProvider } from "@/components/session-provider";
 
 // Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic';
@@ -18,5 +19,9 @@ export default async function KelasDetail({ params }: KelasDetailProps) {
     notFound();
   }
 
-  return <KelasDetailPage kelas={result.data} />;
+  return (
+    <SessionProvider>
+      <KelasDetailPage kelas={result.data} />
+    </SessionProvider>
+  );
 }

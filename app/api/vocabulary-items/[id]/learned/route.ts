@@ -91,42 +91,42 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
     // Trigger gamification if marking as learned
     if (isLearned) {
       try {
-        console.log(`[GAMIFICATION] ========== STARTING VOCABULARY LEARNED EVENT ==========`);
-        console.log(`[GAMIFICATION] User ID: ${session.user.id}`);
-        console.log(`[GAMIFICATION] Item ID: ${itemId}`);
-        console.log(`[GAMIFICATION] Item: ${existingItem.korean} (${existingItem.indonesian})`);
-        console.log(`[GAMIFICATION] Collection ID: ${existingItem.collectionId}`);
-        console.log(`[GAMIFICATION] Triggering COMPLETE_VOCABULARY event...`);
+        // console.log(`[GAMIFICATION] ========== STARTING VOCABULARY LEARNED EVENT ==========`);
+        // console.log(`[GAMIFICATION] User ID: ${session.user.id}`);
+        // console.log(`[GAMIFICATION] Item ID: ${itemId}`);
+        // console.log(`[GAMIFICATION] Item: ${existingItem.korean} (${existingItem.indonesian})`);
+        // console.log(`[GAMIFICATION] Collection ID: ${existingItem.collectionId}`);
+        // console.log(`[GAMIFICATION] Triggering COMPLETE_VOCABULARY event...`);
         
-        const gamificationResult = await GamificationService.triggerEvent(
+        void GamificationService.triggerEvent(
           session.user.id,
           'COMPLETE_VOCABULARY',
           { itemId, collectionId: existingItem.collectionId }
         );
         
-        console.log(`[GAMIFICATION] ========== COMPLETE_VOCABULARY EVENT RESULT ==========`);
-        console.log(`[GAMIFICATION] Success: ${gamificationResult.success}`);
-        if (gamificationResult.success && gamificationResult.data) {
-          console.log(`[GAMIFICATION] Base XP: ${gamificationResult.data.baseXP}`);
-          console.log(`[GAMIFICATION] Streak Bonus: ${gamificationResult.data.streakBonus}`);
-          console.log(`[GAMIFICATION] Total XP: ${gamificationResult.data.totalXP}`);
-          console.log(`[GAMIFICATION] Previous Level: ${gamificationResult.data.previousLevel}`);
-          console.log(`[GAMIFICATION] New Level: ${gamificationResult.data.newLevel}`);
-          console.log(`[GAMIFICATION] Current Streak: ${gamificationResult.data.currentStreak}`);
-          console.log(`[GAMIFICATION] Streak Milestone Reached: ${gamificationResult.data.streakMilestoneReached}`);
-          console.log(`[GAMIFICATION] Activity ID: ${gamificationResult.data.activityId}`);
-        }
-        if (gamificationResult.error) {
-          console.log(`[GAMIFICATION] Error: ${gamificationResult.error}`);
-        }
-        console.log(`[GAMIFICATION] ========== END VOCABULARY LEARNED EVENT ==========`);
-      } catch (gamificationError) {
+        // console.log(`[GAMIFICATION] ========== COMPLETE_VOCABULARY EVENT RESULT ==========`);
+        // console.log(`[GAMIFICATION] Success: ${gamificationResult.success}`);
+        // if (gamificationResult.success && gamificationResult.data) {
+        //   console.log(`[GAMIFICATION] Base XP: ${gamificationResult.data.baseXP}`);
+        //   console.log(`[GAMIFICATION] Streak Bonus: ${gamificationResult.data.streakBonus}`);
+        //   console.log(`[GAMIFICATION] Total XP: ${gamificationResult.data.totalXP}`);
+        //   console.log(`[GAMIFICATION] Previous Level: ${gamificationResult.data.previousLevel}`);
+        //   console.log(`[GAMIFICATION] New Level: ${gamificationResult.data.newLevel}`);
+        //   console.log(`[GAMIFICATION] Current Streak: ${gamificationResult.data.currentStreak}`);
+        //   console.log(`[GAMIFICATION] Streak Milestone Reached: ${gamificationResult.data.streakMilestoneReached}`);
+        //   console.log(`[GAMIFICATION] Activity ID: ${gamificationResult.data.activityId}`);
+        // }
+        // if (gamificationResult.error) {
+        //   console.log(`[GAMIFICATION] Error: ${gamificationResult.error}`);
+        // }
+        // console.log(`[GAMIFICATION] ========== END VOCABULARY LEARNED EVENT ==========`);
+      } catch {
         // Log gamification error but don't fail the main operation
-        console.error('[GAMIFICATION] ========== ERROR IN COMPLETE_VOCABULARY EVENT ==========');
-        console.error('[GAMIFICATION] Error details:', gamificationError);
-        console.error('[GAMIFICATION] Error message:', gamificationError instanceof Error ? gamificationError.message : 'Unknown error');
-        console.error('[GAMIFICATION] Error stack:', gamificationError instanceof Error ? gamificationError.stack : 'No stack trace');
-        console.error('[GAMIFICATION] ========== END ERROR LOGGING ==========');
+        // console.error('[GAMIFICATION] ========== ERROR IN COMPLETE_VOCABULARY EVENT ==========');
+        // console.error('[GAMIFICATION] Error details:', gamificationError);
+        // console.error('[GAMIFICATION] Error message:', gamificationError instanceof Error ? gamificationError.message : 'Unknown error');
+        // console.error('[GAMIFICATION] Error stack:', gamificationError instanceof Error ? gamificationError.stack : 'No stack trace');
+        // console.error('[GAMIFICATION] ========== END ERROR LOGGING ==========');
       }
     }
 

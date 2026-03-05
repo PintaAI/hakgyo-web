@@ -55,7 +55,7 @@ export function TryoutSheet({ isOpen, onOpenChange, tryout, onSuccess, onCancel 
     shuffleQuestions: false,
     passingScore: 60,
     koleksiSoalId: "",
-    kelasId: "",
+    kelasId: "global",
     isActive: false,
   });
 
@@ -78,7 +78,7 @@ export function TryoutSheet({ isOpen, onOpenChange, tryout, onSuccess, onCancel 
         shuffleQuestions: tryout.shuffleQuestions,
         passingScore: tryout.passingScore,
         koleksiSoalId: tryout.koleksiSoalId.toString(),
-        kelasId: tryout.kelasId?.toString() || "",
+        kelasId: tryout.kelasId?.toString() || "global",
         isActive: tryout.isActive,
       });
     } else {
@@ -92,7 +92,7 @@ export function TryoutSheet({ isOpen, onOpenChange, tryout, onSuccess, onCancel 
         shuffleQuestions: false,
         passingScore: 60,
         koleksiSoalId: "",
-        kelasId: "",
+        kelasId: "global",
         isActive: false,
       });
     }
@@ -139,7 +139,7 @@ export function TryoutSheet({ isOpen, onOpenChange, tryout, onSuccess, onCancel 
           shuffleQuestions: formData.shuffleQuestions,
           passingScore: formData.passingScore,
           koleksiSoalId: parseInt(formData.koleksiSoalId),
-          kelasId: formData.kelasId ? parseInt(formData.kelasId) : undefined,
+          kelasId: formData.kelasId === "global" ? undefined : parseInt(formData.kelasId),
           isActive: formData.isActive,
         },
         tryout?.id
@@ -233,7 +233,7 @@ export function TryoutSheet({ isOpen, onOpenChange, tryout, onSuccess, onCancel 
                   <SelectValue placeholder="Global (semua user)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Global (semua user)</SelectItem>
+                  <SelectItem value="global">Global (semua user)</SelectItem>
                   {kelasList.map((kelas) => (
                     <SelectItem key={kelas.id} value={kelas.id.toString()}>
                       {kelas.title} ({kelas._count.members} member)

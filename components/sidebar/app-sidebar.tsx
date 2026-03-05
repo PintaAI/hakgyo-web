@@ -11,16 +11,12 @@ import { SidebarNav } from "./sidebar-nav"
 import { SidebarDevTools } from "./sidebar-devtools"
 import { AppSidebarFooter } from "./sidebar-footer"
 import { getSidebarData } from "./sidebar-data"
-import { useSession } from "@/hooks/use-session"
+import { useSession } from "@/components/session-provider"
 
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  session?: ReturnType<typeof import("@/hooks/use-session").useSession>
-}
+type AppSidebarProps = React.ComponentProps<typeof Sidebar>;
 
-export function AppSidebar({ session: passedSession, ...props }: AppSidebarProps) {
-  const contextSession = useSession()
-  const session = passedSession || contextSession
-  const { user } = session
+export function AppSidebar({ ...props }: AppSidebarProps) {
+  const { user } = useSession()
   const sidebarData = useMemo(() => getSidebarData(user?.role), [user?.role])
 
   return (
@@ -29,10 +25,10 @@ export function AppSidebar({ session: passedSession, ...props }: AppSidebarProps
       <SidebarContent>
         <div className="relative flex flex-col gap-2 transition-all duration-300 ease-in-out group-data-[state=expanded]:top-0 group-data-[state=expanded]:translate-y-0 group-data-[state=collapsed]:top-1/2 group-data-[state=collapsed]:-translate-y-1/2">
           <SidebarNav items={sidebarData.navMain} title="Menu" />
-          <SidebarDevTools projects={sidebarData.projects} session={session} />
+          <SidebarDevTools projects={sidebarData.projects} />
         </div>
       </SidebarContent>
-      <AppSidebarFooter session={session} />
+      <AppSidebarFooter />
       <SidebarRail />
     </Sidebar>
   )

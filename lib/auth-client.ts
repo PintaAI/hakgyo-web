@@ -2,6 +2,12 @@ import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
+  sessionOptions: {
+    // Disable automatic session refetch on window focus to reduce repeated requests
+    refetchOnWindowFocus: false,
+    // Set refetch interval to 0 (disabled) to prevent polling
+    refetchInterval: 0,
+  },
 });
 
 export const {

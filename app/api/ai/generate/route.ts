@@ -28,11 +28,11 @@ const soalItemsSchema = z.array(soalItemSchema).min(1).max(1);
 
 export async function POST(request: Request) {
   const { prompt, existingItems, type = 'vocabulary' } = await request.json();
-  console.log('[ai/generate] request body received', {
-    hasPrompt: !!prompt,
-    type,
-    existingItemsCount: Array.isArray(existingItems) ? existingItems.length : 0,
-  });
+  // console.log('[ai/generate] request body received', {
+  //   hasPrompt: !!prompt,
+  //   type,
+  //   existingItemsCount: Array.isArray(existingItems) ? existingItems.length : 0,
+  // });
 
   if (!prompt) {
     return NextResponse.json({ error: 'Missing prompt' }, { status: 400 });
@@ -54,14 +54,14 @@ export async function POST(request: Request) {
     }
   }
 
-  console.log('[ai/generate] modifiedPrompt preview:', modifiedPrompt.slice(0, 500));
+  // console.log('[ai/generate] modifiedPrompt preview:', modifiedPrompt.slice(0, 500));
 
   if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return NextResponse.json({ error: 'GOOGLE_GENERATIVE_AI_API_KEY not set' }, { status: 500 });
   }
 
   try {
-    console.log('[ai/generate] initializing model (key present)');
+    // console.log('[ai/generate] initializing model (key present)');
     
     // Use the zodSchema helper to convert our Zod schema to AI SDK compatible format
     let sdkSchema;
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     } else {
       sdkSchema = zodSchema(vocabularyItemsSchema);
     }
-    console.log('[ai/generate] calling generateObject with zodSchema for type:', type);
+    // console.log('[ai/generate] calling generateObject with zodSchema for type:', type);
     
     const { object } = await generateObject({
       model: google('gemini-2.5-flash-lite'),
@@ -78,10 +78,10 @@ export async function POST(request: Request) {
       prompt: modifiedPrompt,
     });
     
-    console.log('[ai/generate] generation result received', {
-      objectType: typeof object,
-      itemCount: Array.isArray(object) ? object.length : undefined
-    });
+    // console.log('[ai/generate] generation result received', {
+    //   objectType: typeof object,
+    //   itemCount: Array.isArray(object) ? object.length : undefined
+    // });
     
     return NextResponse.json(object);
   } catch (error) {

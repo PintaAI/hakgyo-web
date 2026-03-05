@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/components/session-provider";
 import PostThread from "../components/post-thread";
 import NewPostForm from "../components/new-post-form";
 

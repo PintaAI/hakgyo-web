@@ -1,6 +1,7 @@
 import { auth } from "./auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 type UserRole = "MURID" | "GURU" | "ADMIN";
 type UserTier = "FREE" | "PREMIUM" | "CUSTOM";
@@ -139,10 +140,18 @@ export async function getCurrentUser() {
   return session?.user || null;
 }
 
-export async function assertAuthenticated() {
-  const session = await auth.api.getSession({
+/**
+ * Cached session getter - deduplicates calls within the same server request
+ * Using React's cache() ensures only one DB/network call per request lifecycle
+ */
+export const getSessionCached = cache(async () => {
+  return auth.api.getSession({
     headers: await headers()
   });
+});
+
+export async function assertAuthenticated() {
+  const session = await getSessionCached();
   if (!session) {
     throw new Error("Authentication required");
   }

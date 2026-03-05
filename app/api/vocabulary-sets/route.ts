@@ -41,9 +41,13 @@ export async function GET(request: NextRequest) {
       const accessConditions: any[] = [
         { userId: session.user.id }, // Own sets
         {
-          kelasId: { in: joinedClassIds },
-          isDraft: false,
-          kelas: { isDraft: false } // Ensure the class itself is not a draft
+          kelasVocabularySets: {
+            some: {
+              kelasId: { in: joinedClassIds },
+              kelas: { isDraft: false }
+            }
+          },
+          isDraft: false
         }
       ];
 
@@ -59,21 +63,27 @@ export async function GET(request: NextRequest) {
           where.OR = [
             { isPublic: true, isDraft: false },
             {
-              kelasId: { in: joinedClassIds },
-              isDraft: false,
-              kelas: { isDraft: false }
+              kelasVocabularySets: {
+                some: {
+                  kelasId: { in: joinedClassIds },
+                  kelas: { isDraft: false }
+                }
+              },
+              isDraft: false
             }
           ];
         }
       } else if (kelasId) {
         // Filtering by specific class
         const kid = parseInt(kelasId);
-        where.kelasId = kid;
+        where.kelasVocabularySets = {
+          some: { kelasId: kid }
+        };
         where.isDraft = false; // Class sets must be published unless owned (handled below)
         
         // If owned by user, can be draft
         if (where.OR) {
-           where.OR.push({ userId: session.user.id, kelasId: kid });
+           where.OR.push({ userId: session.user.id });
         } else {
            where.OR = [
              { isDraft: false },
@@ -111,7 +121,11 @@ export async function GET(request: NextRequest) {
       where.isDraft = false;
       
       if (userId) where.userId = userId;
-      if (kelasId) where.kelasId = parseInt(kelasId);
+      if (kelasId) {
+        where.kelasVocabularySets = {
+          some: { kelasId: parseInt(kelasId) }
+        };
+      }
     }
 
     const vocabularySets = await prisma.vocabularySet.findMany({
@@ -125,13 +139,17 @@ export async function GET(request: NextRequest) {
             image: true
           }
         },
-        kelas: {
-          select: {
-            id: true,
-            title: true,
-            type: true,
-            level: true,
-            isDraft: true
+        kelasVocabularySets: {
+          include: {
+            kelas: {
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                level: true,
+                isDraft: true
+              }
+            }
           }
         },
         _count: {
@@ -248,7 +266,14 @@ export async function POST(request: NextRequest) {
         icon,
         isPublic,
         userId,
-        kelasId: kelasId ? parseInt(kelasId) : null
+        ...(kelasId ? {
+          kelasVocabularySets: {
+            create: {
+              kelasId: parseInt(kelasId),
+              order: 0
+            }
+          }
+        } : {})
       },
       include: {
         user: {
@@ -259,12 +284,16 @@ export async function POST(request: NextRequest) {
             image: true
           }
         },
-        kelas: {
-          select: {
-            id: true,
-            title: true,
-            type: true,
-            level: true
+        kelasVocabularySets: {
+          include: {
+            kelas: {
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                level: true
+              }
+            }
           }
         }
       }

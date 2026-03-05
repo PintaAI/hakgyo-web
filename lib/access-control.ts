@@ -148,13 +148,17 @@ export async function canAccessVocabularySet(userId: string, vocabularySetId: nu
         id: true,
         isPublic: true,
         userId: true,
-        kelas: {
-          select: {
-            id: true,
-            authorId: true,
-            members: {
-              where: { id: userId },
-              select: { id: true }
+        kelasVocabularySets: {
+          include: {
+            kelas: {
+              select: {
+                id: true,
+                authorId: true,
+                members: {
+                  where: { id: userId },
+                  select: { id: true }
+                }
+              }
             }
           }
         }
@@ -166,12 +170,16 @@ export async function canAccessVocabularySet(userId: string, vocabularySetId: nu
     // Allow access if:
     // 1. It's public
     // 2. User owns it
-    // 3. User is member of associated kelas
-    // 4. User is author of associated kelas
+    // 3. User is member of any associated kelas
+    // 4. User is author of any associated kelas
+    const hasKelasAccess = vocabularySet.kelasVocabularySets.some(kvs =>
+      (kvs.kelas?.members && kvs.kelas.members.length > 0) ||
+      kvs.kelas?.authorId === userId
+    );
+    
     return vocabularySet.isPublic ||
            vocabularySet.userId === userId ||
-           (vocabularySet.kelas?.members && vocabularySet.kelas.members.length > 0) ||
-           vocabularySet.kelas?.authorId === userId
+           hasKelasAccess
   } catch (error) {
     console.error('Error checking vocabulary set access:', error)
     return false
@@ -493,10 +501,14 @@ export async function canModifyVocabularySet(userId: string, vocabularySetId: nu
       select: {
         id: true,
         userId: true,
-        kelas: {
-          select: {
-            id: true,
-            authorId: true
+        kelasVocabularySets: {
+          include: {
+            kelas: {
+              select: {
+                id: true,
+                authorId: true
+              }
+            }
           }
         }
       }
@@ -504,8 +516,14 @@ export async function canModifyVocabularySet(userId: string, vocabularySetId: nu
     
     if (!vocabularySet) return false
     
-    return vocabularySet.userId === userId || 
-           vocabularySet.kelas?.authorId === userId
+    // Allow modification if:
+    // 1. User owns the vocabulary set
+    // 2. User is author of any associated kelas
+    const isKelasAuthor = vocabularySet.kelasVocabularySets.some(kvs =>
+      kvs.kelas?.authorId === userId
+    );
+    
+    return vocabularySet.userId === userId || isKelasAuthor
   } catch (error) {
     console.error('Error checking vocabulary set modification access:', error)
     return false

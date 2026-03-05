@@ -5,9 +5,8 @@ import { assertAuthenticated } from "@/lib/auth-actions";
 import { VocabularyType, PartOfSpeech } from "@prisma/client";
 
 // Helper function to sync vocabulary items
-async function syncVocabularyItems(vocabSetId: number, newItemsData: any[]) {
-  const session = await assertAuthenticated();
-
+// Note: caller (saveVocabularySet) is responsible for authentication
+async function syncVocabularyItems(vocabSetId: number, newItemsData: any[], creatorId: string) {
   const existingItems = await prisma.vocabularyItem.findMany({
     where: { collectionId: vocabSetId },
   });
@@ -51,7 +50,7 @@ async function syncVocabularyItems(vocabSetId: number, newItemsData: any[]) {
       dbOperations.push(prisma.vocabularyItem.create({
         data: {
           ...dataPayload,
-          creatorId: session.user.id,
+          creatorId: creatorId,
           collectionId: vocabSetId,
         },
       }));
@@ -97,8 +96,8 @@ export async function saveVocabularySet(kelasId: number | null, vocabSetData: {
         },
       });
       
-      // Sync vocabulary items
-      await syncVocabularyItems(vocabSetId, vocabSetData.items);
+      // Sync vocabulary items (pass creatorId to avoid a second assertAuthenticated call)
+      await syncVocabularyItems(vocabSetId, vocabSetData.items, session.user.id);
       
     } else {
       // Create new vocabulary set with items
@@ -109,7 +108,14 @@ export async function saveVocabularySet(kelasId: number | null, vocabSetData: {
           icon: vocabSetData.icon,
           isPublic: vocabSetData.isPublic,
           userId: session.user.id,
-          kelasId: kelasId,
+          ...(kelasId ? {
+            kelasVocabularySets: {
+              create: {
+                kelasId: kelasId,
+                order: 0
+              }
+            }
+          } : {}),
           items: {
             create: vocabSetData.items.map((item, index) => ({
               korean: item.korean,
@@ -230,18 +236,28 @@ export async function getGuruVocabularySets() {
       where: {
         OR: [
           { userId: userId },
-          { kelasId: { in: joinedKelasIds } }
+          {
+            kelasVocabularySets: {
+              some: {
+                kelasId: { in: joinedKelasIds }
+              }
+            }
+          }
         ]
       },
       include: {
         items: {
           orderBy: { order: 'asc' }
         },
-        kelas: {
-          select: {
-            id: true,
-            title: true,
-            level: true
+        kelasVocabularySets: {
+          include: {
+            kelas: {
+              select: {
+                id: true,
+                title: true,
+                level: true
+              }
+            }
           }
         },
         user: {

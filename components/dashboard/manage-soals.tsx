@@ -9,13 +9,13 @@ import { ManageLayout } from "./manage-layout";
 
 
 interface ManageSoalsProps {
-  soalSets?: SoalSet[];
+  refreshKey?: number;
 }
 
 
-export function ManageSoals({ soalSets: initialSoalSets }: ManageSoalsProps) {
-  const [soalSets, setSoalSets] = useState<SoalSet[]>(initialSoalSets || []);
-  const [loading, setLoading] = useState(!initialSoalSets || (initialSoalSets && initialSoalSets.length === 0));
+export function ManageSoals({ refreshKey = 0 }: ManageSoalsProps) {
+  const [soalSets, setSoalSets] = useState<SoalSet[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"ALL" | "DRAFT" | "PUBLISHED">("ALL");
@@ -23,28 +23,23 @@ export function ManageSoals({ soalSets: initialSoalSets }: ManageSoalsProps) {
   const [editingSoalSet, setEditingSoalSet] = useState<SoalSet | null>(null);
 
   useEffect(() => {
-    if (!initialSoalSets || initialSoalSets.length === 0) {
-      const fetchSoalSets = async () => {
-        try {
-          const result = await getGuruSoalSets();
-          if (result.success && result.data) {
-            setSoalSets(result.data);
-          } else {
-            setError(result.error || "Failed to load soal sets");
-          }
-        } catch {
-          setError("Failed to load soal sets");
-        } finally {
-          setLoading(false);
+    const fetchSoalSets = async () => {
+      try {
+        const result = await getGuruSoalSets();
+        if (result.success && result.data) {
+          setSoalSets(result.data);
+        } else {
+          setError(result.error || "Failed to load soal sets");
         }
-      };
+      } catch {
+        setError("Failed to load soal sets");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      fetchSoalSets();
-    } else {
-      setSoalSets(initialSoalSets);
-      setLoading(false);
-    }
-  }, [initialSoalSets]);
+    fetchSoalSets();
+  }, [refreshKey]);
 
   const filteredSoalSets = soalSets.filter(soalSet => {
     const matchesSearch = soalSet.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||

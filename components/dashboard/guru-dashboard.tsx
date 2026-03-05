@@ -23,15 +23,11 @@ import { ManageClasses } from "@/components/dashboard/manage-classes";
 import { ManageVocab } from "@/components/dashboard/manage-vocab";
 import { ManageSoals } from "@/components/dashboard/manage-soals";
 import { ManageTryout } from "@/components/dashboard/manage-tryout";
-import { VocabSheet, VocabSet } from "@/components/dashboard/vocab-sheet";
-import { SoalSheet, SoalSet } from "@/components/dashboard/soal-sheet";
+import { VocabSheet } from "@/components/dashboard/vocab-sheet";
+import { SoalSheet } from "@/components/dashboard/soal-sheet";
 import { TryoutSheet } from "@/components/dashboard/tryout-sheet";
-import { Tryout } from "@/components/dashboard/tryout-card";
 import { NotificationSheet } from "@/components/dashboard/notification-sheet";
-import { getGuruVocabularySets } from "@/app/actions/kelas/vocabulary";
-import { getGuruSoalSets } from "@/app/actions/kelas/soal-set";
-import { getGuruTryouts } from "@/app/actions/kelas/tryout";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type UserRoles = "GURU" | "MURID" | "ADMIN";
 
@@ -73,13 +69,13 @@ interface GuruDashboardProps {
 
 
 export function GuruDashboard({ stats, user, classes }: GuruDashboardProps) {
-  const [vocabSets, setVocabSets] = useState<VocabSet[]>([]);
-  const [soalSets, setSoalSets] = useState<SoalSet[]>([]);
-  const [tryouts, setTryouts] = useState<Tryout[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [soalSheetOpen, setSoalSheetOpen] = useState(false);
   const [tryoutSheetOpen, setTryoutSheetOpen] = useState(false);
   const [notificationSheetOpen, setNotificationSheetOpen] = useState(false);
+  const [vocabRefreshKey, setVocabRefreshKey] = useState(0);
+  const [soalRefreshKey, setSoalRefreshKey] = useState(0);
+  const [tryoutRefreshKey, setTryoutRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.slice(1);
@@ -89,42 +85,19 @@ export function GuruDashboard({ stats, user, classes }: GuruDashboardProps) {
     return 'tools';
   });
 
-  const fetchData = async () => {
-    try {
-      const vocabResult = await getGuruVocabularySets();
-      if (vocabResult.success && vocabResult.data) {
-        setVocabSets(vocabResult.data);
-      }
-      const soalResult = await getGuruSoalSets();
-      if (soalResult.success && soalResult.data) {
-        setSoalSets(soalResult.data);
-      }
-      const tryoutResult = await getGuruTryouts();
-      if (tryoutResult.success && tryoutResult.data) {
-        setTryouts(tryoutResult.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleVocabSuccess = () => {
     setSheetOpen(false);
-    fetchData();
+    setVocabRefreshKey(k => k + 1);
   };
 
   const handleSoalSuccess = () => {
     setSoalSheetOpen(false);
-    fetchData();
+    setSoalRefreshKey(k => k + 1);
   };
 
   const handleTryoutSuccess = () => {
     setTryoutSheetOpen(false);
-    fetchData();
+    setTryoutRefreshKey(k => k + 1);
   };
 
   const handleNotificationSuccess = () => {
@@ -350,15 +323,15 @@ export function GuruDashboard({ stats, user, classes }: GuruDashboardProps) {
         </TabsContent>
 
         <TabsContent value="vocabulary">
-          <ManageVocab vocabSets={vocabSets} />
+          <ManageVocab refreshKey={vocabRefreshKey} />
         </TabsContent>
 
         <TabsContent value="soals">
-          <ManageSoals soalSets={soalSets} />
+          <ManageSoals refreshKey={soalRefreshKey} />
         </TabsContent>
 
         <TabsContent value="tryout">
-          <ManageTryout tryouts={tryouts} />
+          <ManageTryout refreshKey={tryoutRefreshKey} />
         </TabsContent>
       </Tabs>
 

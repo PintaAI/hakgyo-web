@@ -23,11 +23,16 @@ interface VocabSet {
     indonesian: string;
     type: string;
   }>;
-  kelas: {
+  kelasVocabularySets: Array<{
     id: number;
-    title: string;
-    level: string;
-  } | null;
+    kelasId: number;
+    order: number;
+    kelas: {
+      id: number;
+      title: string;
+      level: string;
+    };
+  }>;
   user: {
     id: string;
     name: string | null;

@@ -18,10 +18,14 @@ export async function GET(request: NextRequest) {
         // Vocabulary from user's joined classes
         {
           collection: {
-            kelas: {
-              members: {
-                some: {
-                  id: userId
+            kelasVocabularySets: {
+              some: {
+                kelas: {
+                  members: {
+                    some: {
+                      id: userId
+                    }
+                  }
                 }
               }
             }
@@ -62,7 +66,14 @@ export async function GET(request: NextRequest) {
         collection: {
           select: {
             title: true,
-            kelas: { select: { title: true } }
+            kelasVocabularySets: {
+              select: {
+                kelas: {
+                  select: { title: true }
+                }
+              },
+              take: 1
+            }
           }
         }
       }

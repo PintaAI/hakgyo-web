@@ -242,7 +242,7 @@ model Kelas {
   materis           Materi[]              @relation("KelasMateri")
   liveSessions      LiveSession[]         @relation("KelasLiveSessions")
   members           User[]                @relation("KelasMembers")
-  vocabularySets    VocabularySet[] // Added inverse relation
+  kelasVocabularySets KelasVocabularySet[]
   completions       UserKelasCompletion[] // Track individual user completions
   posts             Post[]                @relation("KelasPosts") // Class discussion posts
   kelasKoleksiSoals KelasKoleksiSoal[] // Many-to-many relation with question collections
@@ -644,22 +644,20 @@ model TryoutAnswer {
 // ================================
 
 model VocabularySet {
-  id          Int              @id @default(autoincrement())
-  title       String
-  description String?
-  icon        String?          @default("FaBook")
-  isPublic    Boolean          @default(false)
-  isDraft     Boolean          @default(true) // Draft vs Published
-  userId      String?
-  kelasId     Int? // Optional relation to Kelas
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  user        User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kelas       Kelas?           @relation(fields: [kelasId], references: [id], onDelete: Cascade) // Cascade when Kelas is deleted
-  items       VocabularyItem[] @relation("VocabularySetItems")
+  id                   Int                @id @default(autoincrement())
+  title                String
+  description          String?
+  icon                 String?            @default("FaBook")
+  isPublic             Boolean            @default(false)
+  isDraft              Boolean            @default(true) // Draft vs Published
+  userId               String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  user                 User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kelasVocabularySets KelasVocabularySet[]
+  items                VocabularyItem[]   @relation("VocabularySetItems")
 
   @@index([userId])
-  @@index([kelasId])
   @@index([isPublic])
   @@index([isDraft])
 }
@@ -685,6 +683,23 @@ model VocabularyItem {
   @@index([collectionId])
   @@index([order])
   @@index([type])
+}
+
+// Junction table for many-to-many relationship between Kelas and VocabularySet
+model KelasVocabularySet {
+  id             Int      @id @default(autoincrement())
+  kelasId        Int
+  vocabularySetId Int
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  kelas         Kelas         @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  vocabularySet VocabularySet @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
+
+  @@unique([kelasId, vocabularySetId])
+  @@index([kelasId])
+  @@index([vocabularySetId])
+  @@index([order])
 }
 
 model VocabularyItemProgress {

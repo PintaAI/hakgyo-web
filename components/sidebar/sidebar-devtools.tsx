@@ -18,14 +18,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { SidebarProject } from "./sidebar-data"
+import { useSession } from "@/components/session-provider"
 
 interface SidebarDevToolsProps {
   projects: SidebarProject[]
-  session: ReturnType<typeof import("@/hooks/use-session").useSession>
 }
 
-export function SidebarDevTools({ projects, session }: SidebarDevToolsProps) {
-  const { user } = session
+export function SidebarDevTools({ projects }: SidebarDevToolsProps) {
+  const { user } = useSession()
 
   // Only show development tools to admin users
   if (!user || user.role !== 'ADMIN') {

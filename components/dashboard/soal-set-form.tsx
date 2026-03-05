@@ -153,7 +153,7 @@ export function SoalSetForm({ soalSet, kelasId, onAutoSaveStatusChange, onBefore
          setSoals(lastSavedDataRef.current.soals);
        }
      }
-   }, [saving, formData, soals, autoSaveStatus]);
+   }, [saving, formData, soals, autoSaveStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
    // Initialize debounced auto-save with longer delay to see spinner
    const { debouncedSave, cancelAutoSave } = useDebouncedAutoSave({

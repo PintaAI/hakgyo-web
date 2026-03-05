@@ -20,13 +20,10 @@ import { signOut } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
+import { useSession } from "@/components/session-provider"
 
-interface AppSidebarFooterProps {
-  session: ReturnType<typeof import("@/hooks/use-session").useSession>
-}
-
-export function AppSidebarFooter({ session }: AppSidebarFooterProps) {
-  const { user, isLoading } = session
+export function AppSidebarFooter() {
+  const { user, isLoading } = useSession()
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 

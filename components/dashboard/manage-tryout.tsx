@@ -8,12 +8,12 @@ import { ManageLayout } from "./manage-layout";
 import { toast } from "sonner";
 
 interface ManageTryoutProps {
-  tryouts?: Tryout[];
+  refreshKey?: number;
 }
 
-export function ManageTryout({ tryouts: initialTryouts }: ManageTryoutProps) {
-  const [tryouts, setTryouts] = useState<Tryout[]>(initialTryouts || []);
-  const [loading, setLoading] = useState(!initialTryouts || (initialTryouts && initialTryouts.length === 0));
+export function ManageTryout({ refreshKey = 0 }: ManageTryoutProps) {
+  const [tryouts, setTryouts] = useState<Tryout[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingTryout, setEditingTryout] = useState<Tryout | null>(null);
@@ -49,15 +49,9 @@ export function ManageTryout({ tryouts: initialTryouts }: ManageTryoutProps) {
   };
 
   useEffect(() => {
-    if (!initialTryouts || initialTryouts.length === 0) {
-      fetchTryouts();
-      fetchKelas();
-    } else {
-      setTryouts(initialTryouts);
-      setLoading(false);
-      fetchKelas();
-    }
-  }, [initialTryouts]);
+    fetchTryouts();
+    fetchKelas();
+  }, [refreshKey]);
 
   const filteredTryouts = tryouts.filter(tryout => {
     const matchesSearch = tryout.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||

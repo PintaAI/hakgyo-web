@@ -55,18 +55,22 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
             image: true
           }
         },
-        kelas: {
-          select: {
-            id: true,
-            title: true,
-            type: true,
-            level: true,
-            thumbnail: true,
-            author: {
+        kelasVocabularySets: {
+          include: {
+            kelas: {
               select: {
                 id: true,
-                name: true,
-                image: true
+                title: true,
+                type: true,
+                level: true,
+                thumbnail: true,
+                author: {
+                  select: {
+                    id: true,
+                    name: true,
+                    image: true
+                  }
+                }
               }
             }
           }
@@ -179,13 +183,17 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
             image: true
           }
         },
-        kelas: {
-          select: {
-            id: true,
-            title: true,
-            type: true,
-            level: true,
-            thumbnail: true
+        kelasVocabularySets: {
+          include: {
+            kelas: {
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                level: true,
+                thumbnail: true
+              }
+            }
           }
         }
       }

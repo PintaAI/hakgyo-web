@@ -13,7 +13,7 @@ import {
   Eye
 } from "lucide-react";
 import KelasDetailPage from "@/components/kelas/kelas-detail-page";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/components/session-provider";
 
 export function StepReview() {
   const router = useRouter();
@@ -72,7 +72,7 @@ export function StepReview() {
       members: 0,
       materis: materis.length,
       liveSessions: 0,
-      vocabularySets: 0,
+      kelasVocabularySets: 0,
       posts: 0,
       kelasKoleksiSoals: 0, // TODO: Add question sets tracking to store
     },

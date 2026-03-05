@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
     try {
-        // const session = await auth.api.getSession({ headers: request.headers });
+        const session = await auth.api.getSession({ headers: request.headers });
 
         // Filters
         const searchParams = request.nextUrl.searchParams;
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
         const koleksiSoalId = searchParams.get('koleksiSoalId');
         const kelasId = searchParams.get('kelasId');
         const isActive = searchParams.get('isActive');
+        const userjoinedkelas = searchParams.get('userjoinedkelas') === 'true';
         const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
         const where: any = {};
@@ -19,6 +20,30 @@ export async function GET(request: NextRequest) {
         if (koleksiSoalId) where.koleksiSoalId = parseInt(koleksiSoalId);
         if (kelasId) where.kelasId = parseInt(kelasId);
         if (isActive !== null) where.isActive = isActive === 'true';
+
+        // Filter by user's joined kelas when userjoinedkelas=true
+        if (userjoinedkelas) {
+            if (!session?.user?.id) {
+                return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+            }
+
+            // Get user's joined kelas
+            const userKelas = await prisma.kelas.findMany({
+                where: {
+                    members: {
+                        some: { id: session.user.id }
+                    }
+                },
+                select: { id: true }
+            });
+
+            // Filter tryouts by user's kelas
+            where.kelasId = {
+                in: userKelas.map(k => k.id)
+            };
+            // Ensure only active tryouts are returned
+            where.isActive = true;
+        }
 
         // List tryouts
         const tryouts = await prisma.tryout.findMany({

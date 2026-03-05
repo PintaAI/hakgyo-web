@@ -9,13 +9,13 @@ import { ManageLayout } from "./manage-layout";
 
 
 interface ManageVocabProps {
-  vocabSets?: VocabSet[];
+  refreshKey?: number;
 }
 
 
-export function ManageVocab({ vocabSets: initialVocabSets }: ManageVocabProps) {
-  const [vocabSets, setVocabSets] = useState<VocabSet[]>(initialVocabSets || []);
-  const [loading, setLoading] = useState(!initialVocabSets || (initialVocabSets && initialVocabSets.length === 0));
+export function ManageVocab({ refreshKey = 0 }: ManageVocabProps) {
+  const [vocabSets, setVocabSets] = useState<VocabSet[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingVocabSet, setEditingVocabSet] = useState<VocabSet | null>(null);
@@ -26,7 +26,12 @@ export function ManageVocab({ vocabSets: initialVocabSets }: ManageVocabProps) {
     try {
       const result = await getGuruVocabularySets();
       if (result.success && result.data) {
-        setVocabSets(result.data);
+        // Transform the API response to match VocabSet interface
+        const transformedVocabSets = result.data.map(set => ({
+          ...set,
+          kelas: set.kelasVocabularySets?.[0]?.kelas || null
+        }));
+        setVocabSets(transformedVocabSets);
       } else {
         setError(result.error || "Gagal memuat set kosakata");
       }
@@ -38,13 +43,8 @@ export function ManageVocab({ vocabSets: initialVocabSets }: ManageVocabProps) {
   };
 
   useEffect(() => {
-    if (!initialVocabSets || initialVocabSets.length === 0) {
-      fetchVocabSets();
-    } else {
-      setVocabSets(initialVocabSets);
-      setLoading(false);
-    }
-  }, [initialVocabSets]);
+    fetchVocabSets();
+  }, [refreshKey]);
 
   const filteredVocabSets = vocabSets.filter(vocabSet => {
     const matchesSearch = vocabSet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

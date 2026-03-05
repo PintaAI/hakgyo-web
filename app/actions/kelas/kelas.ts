@@ -157,10 +157,14 @@ export async function getKelasById(id: number) {
             }
           }
         },
-        vocabularySets: {
+        kelasVocabularySets: {
           include: {
-            items: {
-              orderBy: { order: "asc" }
+            vocabularySet: {
+              include: {
+                items: {
+                  orderBy: { order: "asc" }
+                }
+              }
             }
           }
         },
@@ -184,8 +188,8 @@ export async function getKelasById(id: number) {
       discount: kelas.discount ? Number(kelas.discount) : null,
       // Flatten the koleksiSoals from the junction table
       koleksiSoals: kelas.kelasKoleksiSoals.map(junction => junction.koleksiSoal),
-      // Include vocabulary sets directly
-      vocabularySets: kelas.vocabularySets,
+      // Flatten the vocabularySets from the junction table
+      vocabularySets: kelas.kelasVocabularySets.map(junction => junction.vocabularySet),
     };
 
     return { success: true, data: serializedKelas };

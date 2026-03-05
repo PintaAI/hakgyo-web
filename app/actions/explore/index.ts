@@ -136,10 +136,14 @@ export async function getExploreData() {
           select: {
             id: true,
             title: true,
-            kelas: {
+            kelasVocabularySets: {
               select: {
-                id: true,
-                title: true,
+                kelas: {
+                  select: {
+                    id: true,
+                    title: true,
+                  },
+                },
               },
             },
           },
@@ -264,9 +268,9 @@ export async function getExploreData() {
         id: vocab.collection.id,
         title: vocab.collection.title,
       } : null,
-      connectedKelas: vocab.collection?.kelas ? {
-        id: vocab.collection.kelas.id,
-        title: vocab.collection.kelas.title,
+      connectedKelas: vocab.collection?.kelasVocabularySets?.[0]?.kelas ? {
+        id: vocab.collection.kelasVocabularySets[0].kelas.id,
+        title: vocab.collection.kelasVocabularySets[0].kelas.title,
       } : undefined,
       difficulty: 'BEGINNER' as const,
       rating: 4.5,

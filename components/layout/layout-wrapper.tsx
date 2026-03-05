@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/sidebar"
-import { useSession } from "@/hooks/use-session"
+import { SessionProvider, useSession } from "@/components/session-provider"
 
 interface LayoutWrapperProps {
   children: React.ReactNode
@@ -16,7 +16,7 @@ const noSidebarRoutes = [
   "/auth",  // Auth page
 ]
 
-export function LayoutWrapper({ children }: LayoutWrapperProps) {
+function LayoutWrapperContent({ children }: LayoutWrapperProps) {
   const pathname = usePathname()
   const router = useRouter()
   const session = useSession()
@@ -42,10 +42,18 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
   
   return (
     <SidebarProvider defaultOpen={false}>
-      <AppSidebar session={session} />
+      <AppSidebar />
       <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
         {children}
       </main>
     </SidebarProvider>
+  )
+}
+
+export function LayoutWrapper({ children }: LayoutWrapperProps) {
+  return (
+    <SessionProvider>
+      <LayoutWrapperContent>{children}</LayoutWrapperContent>
+    </SessionProvider>
   )
 }
