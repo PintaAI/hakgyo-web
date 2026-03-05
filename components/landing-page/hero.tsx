@@ -39,7 +39,7 @@ export const Hero = () => {
           <div className="text-center lg:text-left">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-2 backdrop-blur-md">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">Terpercaya oleh 1.000+ siswa Indonesia</span>
+              <span className="text-sm font-medium">Terpercaya oleh 10.000+ siswa Indonesia</span>
             </div>
 
             <div className="rounded-3xl border border-primary-foreground/15 bg-background/10 p-6 shadow-2xl backdrop-blur-xl md:p-8">
