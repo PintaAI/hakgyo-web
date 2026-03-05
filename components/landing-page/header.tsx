@@ -81,7 +81,7 @@ export const Header = () => {
               </div>
               <div className="hidden sm:block">
                 <span className="font-bold text-xl text-foreground">Hakgyo</span>
-                <p className="text-xs text-muted-foreground -mt-1">LPK Korea & EPS-TOPIK</p>
+                <p className="text-xs text-muted-foreground -mt-1">EPS-TOPIK</p>
               </div>
             </Link>
           </div>
