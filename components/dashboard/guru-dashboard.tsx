@@ -16,6 +16,7 @@ import {
   Bell
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 
 import { Difficulty } from "@prisma/client";
 import { SearchComponent } from "@/components/ui/search";
@@ -27,7 +28,7 @@ import { VocabSheet } from "@/components/dashboard/vocab-sheet";
 import { SoalSheet } from "@/components/dashboard/soal-sheet";
 import { TryoutSheet } from "@/components/dashboard/tryout-sheet";
 import { NotificationSheet } from "@/components/dashboard/notification-sheet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type UserRoles = "GURU" | "MURID" | "ADMIN";
 
@@ -69,6 +70,9 @@ interface GuruDashboardProps {
 
 
 export function GuruDashboard({ stats, user, classes }: GuruDashboardProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  
   const [sheetOpen, setSheetOpen] = useState(false);
   const [soalSheetOpen, setSoalSheetOpen] = useState(false);
   const [tryoutSheetOpen, setTryoutSheetOpen] = useState(false);
@@ -76,14 +80,16 @@ export function GuruDashboard({ stats, user, classes }: GuruDashboardProps) {
   const [vocabRefreshKey, setVocabRefreshKey] = useState(0);
   const [soalRefreshKey, setSoalRefreshKey] = useState(0);
   const [tryoutRefreshKey, setTryoutRefreshKey] = useState(0);
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.slice(1);
-      const validTabs = ['tools', 'classes', 'vocabulary', 'soals', 'tryout'];
-      return validTabs.includes(hash) ? hash : 'tools';
+  const [activeTab, setActiveTab] = useState('tools');
+
+  // Sync active tab with URL hash after mount to avoid hydration mismatch
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    const validTabs = ['tools', 'classes', 'vocabulary', 'soals', 'tryout'];
+    if (validTabs.includes(hash)) {
+      setActiveTab(hash);
     }
-    return 'tools';
-  });
+  }, []);
 
   const handleVocabSuccess = () => {
     setSheetOpen(false);
@@ -220,7 +226,14 @@ export function GuruDashboard({ stats, user, classes }: GuruDashboardProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); window.location.hash = value; }} className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          setActiveTab(value);
+          router.replace(`${pathname}#${value}`, { scroll: false });
+        }}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="tools">
             <Wrench className="w-4 h-4 mr-2" />

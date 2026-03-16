@@ -97,32 +97,11 @@ export class GamificationService {
       };
 
       // Process the reward
-      console.log(`[GAMIFICATION] Processing reward for event: ${event}`);
-      console.log(`[GAMIFICATION] User data before reward:`, {
-        totalXP: user.xp,
-        currentStreak: user.currentStreak,
-        longestStreak: user.longestStreak,
-        lastActive: user.lastActive
-      });
       const rewardResult = processReward(event, userData, true);
-      console.log(`[GAMIFICATION] Reward result:`, {
-        baseXP: rewardResult.baseXP,
-        streakBonus: rewardResult.streakBonus,
-        totalXP: rewardResult.totalXP,
-        previousStreak: rewardResult.streakData.currentStreak - (rewardResult.streakData.currentStreak > user.currentStreak ? 1 : 0),
-        newStreak: rewardResult.streakData.currentStreak,
-        streakMilestoneReached: rewardResult.streakMilestoneReached
-      });
 
       // Calculate streak reset information
       const hoursUntilReset = getHoursUntilReset(user.lastActive);
       const hoursUntilNewStreak = getHoursUntilNewStreak(user.lastActive);
-      
-      console.log(`[GAMIFICATION] Streak reset info:`, {
-        hoursUntilReset,
-        hoursUntilNewStreak,
-        lastActive: user.lastActive
-      });
 
       // Get the base XP for the event
       const baseXP = getEventXP(event);
@@ -187,16 +166,6 @@ export class GamificationService {
     currentStreakHistory: any[],
     metadata?: Record<string, any>
   ): Promise<{ activityLogId: string }> {
-    console.log(`[GAMIFICATION] ========== UPDATE USER GAMIFICATION START ==========`);
-    console.log(`[GAMIFICATION] User ID: ${userId}`);
-    console.log(`[GAMIFICATION] Event: ${event}`);
-    console.log(`[GAMIFICATION] Base XP: ${baseXP}`);
-    console.log(`[GAMIFICATION] User current streak before: ${user.currentStreak}`);
-    console.log(`[GAMIFICATION] User longest streak before: ${user.longestStreak}`);
-    console.log(`[GAMIFICATION] User last active before: ${user.lastActive}`);
-    console.log(`[GAMIFICATION] Reward result streak: ${rewardResult.streakData.currentStreak}`);
-    console.log(`[GAMIFICATION] Streak milestone reached: ${rewardResult.streakMilestoneReached}`);
-    
     return await prisma.$transaction(async (tx) => {
       // Check for streak milestone and award bonus if reached
       if (rewardResult.streakMilestoneReached) {
@@ -218,10 +187,6 @@ export class GamificationService {
 
       // Update user's XP, level, and streak
       const streakChanged = rewardResult.streakData.currentStreak !== user.currentStreak;
-      if (streakChanged) {
-        console.log(`[GAMIFICATION] Streak updated for user ${userId}: ${user.currentStreak} -> ${rewardResult.streakData.currentStreak}`);
-      }
-      
       await tx.user.update({
         where: { id: userId },
         data: {
@@ -273,16 +238,6 @@ export class GamificationService {
         },
       });
 
-      console.log(`[GAMIFICATION] Activity log created for user ${userId}:`, {
-        event,
-        xpEarned: rewardResult.totalXP,
-        streakUpdated: streakChanged,
-        newStreak: rewardResult.streakData.currentStreak,
-        newLevel: rewardResult.levelProgress.currentLevel,
-        levelsGained: rewardResult.levelsGained
-      });
-
-      console.log(`[GAMIFICATION] ========== UPDATE USER GAMIFICATION END ==========`);
       return { activityLogId: activityLog.id };
     });
   }

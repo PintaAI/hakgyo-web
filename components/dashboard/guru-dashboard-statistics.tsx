@@ -153,63 +153,42 @@ export function GuruDashboardStatistics() {
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.35, delay: 0.02 }}
+          transition={{ duration: 0.35, delay: 0.08 }}
         >
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: 0.04 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, delay: 0.06 }}
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.35, delay: 0.08 }}
-              >
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      Tayangan dari Waktu ke Waktu
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${viewsDeltaPct >= 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400" : "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400"}`}>
-                        {viewsDeltaPct >= 0 ? `+${viewsDeltaPct}%` : `${viewsDeltaPct}%`}
-                      </span>
-                    </CardTitle>
-                    <CardDescription>Tayangan konten bulanan</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={viewsSeries}>
-                        <defs>
-                          <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis tickFormatter={fmtNumber} />
-                        <RechartsTooltip content={renderTooltip} />
-                        <Area
-                          type="monotone"
-                          dataKey="views"
-                          stroke="#3b82f6"
-                          fill="url(#viewsGradient)"
-                          strokeWidth={2}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </motion.div>
-        </motion.div>
-        </motion.div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Tayangan dari Waktu ke Waktu
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${viewsDeltaPct >= 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400" : "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400"}`}>
+                  {viewsDeltaPct >= 0 ? `+${viewsDeltaPct}%` : `${viewsDeltaPct}%`}
+                </span>
+              </CardTitle>
+              <CardDescription>Tayangan konten bulanan</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={viewsSeries}>
+                  <defs>
+                    <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={fmtNumber} />
+                  <RechartsTooltip content={renderTooltip} />
+                  <Area
+                    type="monotone"
+                    dataKey="views"
+                    stroke="#3b82f6"
+                    fill="url(#viewsGradient)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Completion Status */}

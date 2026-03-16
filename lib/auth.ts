@@ -149,18 +149,10 @@ export const auth = betterAuth({
     process.env.NEXT_PUBLIC_APP_URL || ""
   ].filter(Boolean),
   logger: {
-    level: "error",
-    disabled: false,
+    disabled: true,
   },
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
-      // Log request for debugging
-      console.log("Better Auth Request:", {
-        path: ctx.path,
-        method: ctx.request?.method,
-        body: ctx.body,
-      });
-
       // Handle sign-up
       if (ctx.path.startsWith("/sign-up")) {
         const newSession = ctx.context.newSession;
@@ -195,10 +187,6 @@ export const auth = betterAuth({
       // Handle social sign-in
       if (ctx.path.startsWith("/sign-in/social")) {
         const newSession = ctx.context.newSession;
-        console.log("Social Sign-In Response:", {
-          newSession,
-          responseHeaders: ctx.context.responseHeaders,
-        });
         // Check if user has any kelas, if not assign default kelas
         if (newSession?.user) {
           try {

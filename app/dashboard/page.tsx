@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { AdminDashboard } from "../../components/dashboard/admin-dashboard";
 import { GuruDashboard } from "../../components/dashboard/guru-dashboard";
 import { getGuruDashboardData } from "../actions/dashboard/guru";
 import { getAdminDashboardData } from "../actions/dashboard/admin";
 import { getUserKelasList } from "../actions/kelas";
 import { getSessionCached } from "../../lib/auth-actions";
+import DashboardLoading from "./loading";
 
 type UserRoles = "GURU" | "MURID" | "ADMIN";
 
@@ -33,35 +35,46 @@ export default async function DashboardPage() {
       return <AdminDashboard user={user} />;
     }
   } else if (user.role === "GURU") {
-    // Fetch real guru dashboard data
-    const dashboardResult = await getGuruDashboardData();
-    const classesResult = await getUserKelasList();
-
-    if (!dashboardResult.success) {
-      // Fallback to empty data if fetch fails
-      const emptyData = {
-        stats: {
-          totalClasses: 0,
-          publishedClasses: 0,
-          draftClasses: 0,
-          totalStudents: 0,
-          totalMateris: 0
-        },
-        recentClasses: [],
-        classes: classesResult.success ? classesResult.data || [] : [],
-        user
-      };
-      return <GuruDashboard {...emptyData} />;
-    }
-
-    return <GuruDashboard
-      stats={dashboardResult.data!.stats}
-      recentClasses={dashboardResult.data!.recentClasses}
-      classes={classesResult.success ? classesResult.data || [] : []}
-      user={user}
-    />;
+    return (
+      <Suspense fallback={<DashboardLoading />}>
+        <GuruDashboardContent user={user} />
+      </Suspense>
+    );
   }
 
   // Redirect students to another page (they shouldn't access this dashboard)
   redirect("/");
+}
+
+// Separate async component for guru dashboard data fetching
+async function GuruDashboardContent({ user }: { user: DashboardUser }) {
+  // Fetch real guru dashboard data in parallel to avoid waterfall
+  const [dashboardResult, classesResult] = await Promise.all([
+    getGuruDashboardData(),
+    getUserKelasList()
+  ]);
+
+  if (!dashboardResult.success) {
+    // Fallback to empty data if fetch fails
+    const emptyData = {
+      stats: {
+        totalClasses: 0,
+        publishedClasses: 0,
+        draftClasses: 0,
+        totalStudents: 0,
+        totalMateris: 0
+      },
+      recentClasses: [],
+      classes: classesResult.success ? classesResult.data || [] : [],
+      user
+    };
+    return <GuruDashboard {...emptyData} />;
+  }
+
+  return <GuruDashboard
+    stats={dashboardResult.data!.stats}
+    recentClasses={dashboardResult.data!.recentClasses}
+    classes={classesResult.success ? classesResult.data || [] : []}
+    user={user}
+  />;
 }

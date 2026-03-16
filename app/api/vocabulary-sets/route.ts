@@ -197,10 +197,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: filteredVocabularySets,
-      meta: {
+      pagination: {
+        page: Math.floor(offset / (limit || 10)) + 1,
+        limit: limit || 10,
         total: filteredVocabularySets.length,
-        offset,
-        limit
+        totalPages: Math.ceil(filteredVocabularySets.length / (limit || 10))
       }
     })
   } catch (error) {

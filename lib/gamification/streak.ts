@@ -69,15 +69,6 @@ export function updateStreak(
   activeToday: boolean = true,
   userTimeZone?: string
 ): StreakData {
-  console.log(`[STREAK] ========== UPDATE STREAK START ==========`);
-  console.log(`[STREAK] Input streak data:`, {
-    currentStreak: currentStreakData.currentStreak,
-    lastActiveDate: currentStreakData.lastActiveDate,
-    longestStreak: currentStreakData.longestStreak,
-    activeToday,
-    userTimeZone
-  });
-  
   const now = new Date();
   
   // Use user timezone if provided, otherwise use server time
@@ -181,14 +172,6 @@ export function updateStreak(
     longestStreak: newLongestStreak,
     streakHistory: newHistory,
   };
-  
-  console.log(`[STREAK] Output streak data:`, {
-    currentStreak: result.currentStreak,
-    lastActiveDate: result.lastActiveDate,
-    longestStreak: result.longestStreak,
-    streakHistoryLength: result.streakHistory.length
-  });
-  console.log(`[STREAK] ========== UPDATE STREAK END ==========`);
   
   return result;
 }
