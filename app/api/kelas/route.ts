@@ -45,53 +45,57 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const kelas = await prisma.kelas.findMany({
-      where,
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true
-          }
-        },
-        materis: {
-          select: {
-            id: true,
-            title: true,
-            order: true,
-            isDemo: true
+    const [kelas, totalCount] = await Promise.all([
+      prisma.kelas.findMany({
+        where,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true
+            }
           },
-          orderBy: { order: 'asc' }
-        },
-        members: {
-          select: {
-            id: true,
-            name: true,
-            image: true
+          materis: {
+            select: {
+              id: true,
+              title: true,
+              order: true,
+              isDemo: true
+            },
+            orderBy: { order: 'asc' }
+          },
+          members: {
+            select: {
+              id: true,
+              name: true,
+              image: true
+            }
+          },
+          _count: {
+            select: {
+              materis: true,
+              members: true,
+              completions: true
+            }
           }
         },
-        _count: {
-          select: {
-            materis: true,
-            members: true,
-            completions: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset
-    })
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset
+      }),
+      prisma.kelas.count({ where })
+    ])
 
     return NextResponse.json({
       success: true,
       data: kelas,
-      meta: {
-        total: kelas.length,
-        offset,
-        limit
+      pagination: {
+        total: totalCount,
+        page: Math.floor(offset / (limit || 10)) + 1,
+        limit: limit || 10,
+        totalPages: Math.ceil(totalCount / (limit || 10))
       }
     })
   } catch (error) {

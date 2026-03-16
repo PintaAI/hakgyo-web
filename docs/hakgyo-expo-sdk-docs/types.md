@@ -256,13 +256,15 @@ Generic API response wrapper used by all API endpoints.
 ### PaginatedResponse<T>
 
 ```typescript
+export interface PaginatedMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  pagination: PaginatedMeta;
   streakInfo?: StreakInfo;
 }
 ```
@@ -484,6 +486,7 @@ export interface Kelas {
   author?: User;
   createdAt: string;
   updatedAt: string;
+  isEnrolled?: boolean;
 }
 ```
 
@@ -851,6 +854,7 @@ export interface Post {
   authorId: string;
   author?: User;
   kelasId?: number;
+  userLiked?: boolean;
 }
 ```
 

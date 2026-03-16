@@ -1,6 +1,6 @@
-# Soares API Reference
+# Soal API Reference
 
-The Soares API provides methods for managing question banks (soal) and question collections (koleksi soal) in the HakgyoExpo platform. It enables you to create, organize, and manage quiz questions for Korean language learning assessments.
+The Soal API provides methods for managing question banks (soal) and question collections (koleksi soal) in the HakgyoExpo platform. It enables you to create, organize, and manage quiz questions for Korean language learning assessments.
 
 ## Installation
 
@@ -20,23 +20,23 @@ import { soalApi } from '@hakgyo/expo-sdk';
 
 The [`soalApi`](packages/hakgyo-expo-sdk/src/api/soal.ts:6) object provides the following functionality:
 
-- **Daily Soares**: Fetch daily questions for consistent practice
-- **Question Collections (Koleksi Soares)**: Create, read, update, and delete question collections
-- **Individual Soares**: Manage questions within collections
+- **Daily Soal**: Fetch daily questions for consistent practice
+- **Question Collections (Koleksi Soal)**: Create, read, update, and delete question collections
+- **Individual Soal**: Manage questions within collections
 - **Question Activation**: Toggle question active status for assessments
 
 ---
 
 ## Available Methods
 
-### Daily Soares
+### Daily Soal
 
 #### `getDaily(userId, take?)`
 
 Retrieves daily questions for a specific user. This is useful for implementing daily practice features.
 
 ```typescript
-const dailySoals = await soalApi.getDaily('user-123', 5);
+const response = await soalApi.getDaily('user-123', 5);
 ```
 
 **Parameters:**
@@ -46,23 +46,26 @@ const dailySoals = await soalApi.getDaily('user-123', 5);
 | `userId` | `string` | - | The unique identifier of the user |
 | `take` | `number` | `5` | Number of questions to retrieve |
 
-**Returns:** `Promise<Soal[]>`
+**Returns:** `Promise<ApiResponse<Soal[]>>`
 
 **Example Response:**
 
 ```json
-[
-  {
-    "id": 1,
-    "pertanyaan": "Apa bahasa Korea dari 'Halo'?",
-    "difficulty": "BEGINNER",
-    "isActive": true,
-    "opsis": [
-      { "id": 1, "opsiText": "안녕하세요", "isCorrect": true },
-      { "id": 2, "opsiText": "감사합니다", "isCorrect": false }
-    ]
-  }
-]
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "pertanyaan": "Apa bahasa Korea dari 'Halo'?",
+      "difficulty": "BEGINNER",
+      "isActive": true,
+      "opsis": [
+        { "id": 1, "opsiText": "안녕하세요", "isCorrect": true },
+        { "id": 2, "opsiText": "감사합니다", "isCorrect": false }
+      ]
+    }
+  ]
+}
 ```
 
 ---
@@ -89,7 +92,7 @@ const response = await soalApi.listCollections({
 |-----------|------|-------------|
 | `params` | [`KoleksiSoalQueryParams`](#koleksisoalqueryparams) | Optional query parameters for filtering, pagination, and sorting |
 
-**Returns:** `Promise<PaginatedResponse<KoleksiSoal>>`
+**Returns:** `Promise<ApiResponse<KoleksiSoal[], PaginatedMeta>>`
 
 ---
 
@@ -98,7 +101,7 @@ const response = await soalApi.listCollections({
 Retrieves a single question collection by its ID.
 
 ```typescript
-const collection = await soalApi.getCollection(1);
+const response = await soalApi.getCollection(1);
 ```
 
 **Parameters:**
@@ -107,7 +110,7 @@ const collection = await soalApi.getCollection(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the question collection |
 
-**Returns:** `Promise<KoleksiSoal>`
+**Returns:** `Promise<ApiResponse<KoleksiSoal>>`
 
 ---
 
@@ -116,7 +119,7 @@ const collection = await soalApi.getCollection(1);
 Creates a new question collection.
 
 ```typescript
-const newCollection = await soalApi.createCollection({
+const response = await soalApi.createCollection({
   title: 'Korean Basics Quiz',
   description: 'Essential Korean vocabulary quiz'
 });
@@ -128,7 +131,7 @@ const newCollection = await soalApi.createCollection({
 |-----------|------|-------------|
 | `data` | `Partial<KoleksiSoal>` | The question collection data to create |
 
-**Returns:** `Promise<KoleksiSoal>`
+**Returns:** `Promise<ApiResponse<KoleksiSoal>>`
 
 ---
 
@@ -137,7 +140,7 @@ const newCollection = await soalApi.createCollection({
 Updates an existing question collection.
 
 ```typescript
-const updated = await soalApi.updateCollection(1, {
+const response = await soalApi.updateCollection(1, {
   title: 'Korean Basics Quiz - Updated',
   description: 'Updated description'
 });
@@ -150,7 +153,7 @@ const updated = await soalApi.updateCollection(1, {
 | `id` | `number` | The unique identifier of the question collection |
 | `data` | `Partial<KoleksiSoal>` | The data to update |
 
-**Returns:** `Promise<KoleksiSoal>`
+**Returns:** `Promise<ApiResponse<KoleksiSoal>>`
 
 ---
 
@@ -159,7 +162,7 @@ const updated = await soalApi.updateCollection(1, {
 Deletes a question collection.
 
 ```typescript
-await soalApi.deleteCollection(1);
+const response = await soalApi.deleteCollection(1);
 ```
 
 **Parameters:**
@@ -168,11 +171,11 @@ await soalApi.deleteCollection(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the question collection |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<void>>`
 
 ---
 
-### Individual Soares (Questions)
+### Individual Soal (Questions)
 
 #### `listQuestions(params?)`
 
@@ -194,7 +197,7 @@ const response = await soalApi.listQuestions({
 |-----------|------|-------------|
 | `params` | [`SoalQueryParams`](#soalqueryparams) | Optional query parameters for filtering, pagination, and sorting |
 
-**Returns:** `Promise<PaginatedResponse<Soal>>`
+**Returns:** `Promise<ApiResponse<Soal[], PaginatedMeta>>`
 
 ---
 
@@ -203,7 +206,7 @@ const response = await soalApi.listQuestions({
 Retrieves a single question by its ID.
 
 ```typescript
-const question = await soalApi.getQuestion(1);
+const response = await soalApi.getQuestion(1);
 ```
 
 **Parameters:**
@@ -212,7 +215,7 @@ const question = await soalApi.getQuestion(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the question |
 
-**Returns:** `Promise<Soal>`
+**Returns:** `Promise<ApiResponse<Soal>>`
 
 ---
 
@@ -221,7 +224,7 @@ const question = await soalApi.getQuestion(1);
 Creates a new question.
 
 ```typescript
-const newQuestion = await soalApi.createQuestion({
+const response = await soalApi.createQuestion({
   koleksiSoalId: 1,
   pertanyaan: 'Apa bahasa Korea dari "Terima kasih"?',
   difficulty: 'BEGINNER',
@@ -243,7 +246,7 @@ const newQuestion = await soalApi.createQuestion({
 |-----------|------|-------------|
 | `data` | `Partial<Soal>` | The question data to create |
 
-**Returns:** `Promise<Soal>`
+**Returns:** `Promise<ApiResponse<Soal>>`
 
 ---
 
@@ -252,7 +255,7 @@ const newQuestion = await soalApi.createQuestion({
 Updates an existing question.
 
 ```typescript
-const updated = await soalApi.updateQuestion(1, {
+const response = await soalApi.updateQuestion(1, {
   pertanyaan: 'Updated question text',
   explanation: 'Updated explanation'
 });
@@ -265,7 +268,7 @@ const updated = await soalApi.updateQuestion(1, {
 | `id` | `number` | The unique identifier of the question |
 | `data` | `Partial<Soal>` | The data to update |
 
-**Returns:** `Promise<Soal>`
+**Returns:** `Promise<ApiResponse<Soal>>`
 
 ---
 
@@ -274,7 +277,7 @@ const updated = await soalApi.updateQuestion(1, {
 Deletes a question.
 
 ```typescript
-await soalApi.deleteQuestion(1);
+const response = await soalApi.deleteQuestion(1);
 ```
 
 **Parameters:**
@@ -283,7 +286,7 @@ await soalApi.deleteQuestion(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the question |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<void>>`
 
 ---
 
@@ -292,8 +295,7 @@ await soalApi.deleteQuestion(1);
 Toggles the active status of a question. This is useful for enabling/disabling questions in assessments without deleting them.
 
 ```typescript
-const toggled = await soalApi.toggleQuestionActive(1);
-console.log('Question active:', toggled.isActive);
+const response = await soalApi.toggleQuestionActive(1);
 ```
 
 **Parameters:**
@@ -302,7 +304,7 @@ console.log('Question active:', toggled.isActive);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the question |
 
-**Returns:** `Promise<Soal>` - The updated question with toggled active status
+**Returns:** `Promise<ApiResponse<Soal>>` - The updated question with toggled active status
 
 ---
 
@@ -324,12 +326,12 @@ interface KoleksiSoal {
 
 ---
 
-### Soares
+### Soal
 
 Represents an individual question with multiple choice options.
 
 ```typescript
-interface Soares {
+interface Soal {
   id: number;
   koleksiSoalId: number;
   authorId: string;
@@ -341,7 +343,7 @@ interface Soares {
   createdAt: string;
   updatedAt: string;
   opsis: Opsi[];
-  attachments: SoaresAttachment[];
+  attachments: SoalAttachment[];
   koleksiSoal?: {
     nama: string;
     deskripsi?: string;
@@ -370,12 +372,12 @@ interface Opsi {
 
 ---
 
-### SoaresAttachment
+### SoalAttachment
 
 Represents an attachment (image, audio, etc.) associated with a question.
 
 ```typescript
-interface SoaresAttachment {
+interface SoalAttachment {
   id: number;
   soalId: number;
   url: string;
@@ -407,12 +409,12 @@ interface KoleksiSoalQueryParams extends QueryParams {
 
 ---
 
-### SoaresQueryParams
+### SoalQueryParams
 
 Query parameters for filtering questions.
 
 ```typescript
-interface SoaresQueryParams extends QueryParams {
+interface SoalQueryParams extends QueryParams {
   authorId?: string;
   koleksiSoalId?: string;
 }
@@ -457,7 +459,7 @@ interface PaginatedResponse<T> extends ApiResponse<T[]> {
 
 ## Usage Examples
 
-### Fetching Daily Soares
+### Fetching Daily Soal
 
 ```typescript
 import { soalApi } from '@hakgyo/expo-sdk';
@@ -532,7 +534,7 @@ async function deleteCollection(id: number) {
 
 ---
 
-### Working with Individual Soares
+### Working with Individual Soal
 
 ```typescript
 import { soalApi } from '@hakgyo/expo-sdk';

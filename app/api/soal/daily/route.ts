@@ -151,7 +151,10 @@ export async function GET(request: NextRequest) {
 
     // Return empty array if no soal found
     if (totalCount === 0) {
-      return NextResponse.json([]);
+      return NextResponse.json({
+        success: true,
+        data: []
+      });
     }
 
     // Calculate random offset for variety
@@ -166,15 +169,18 @@ export async function GET(request: NextRequest) {
       select: getSoalSelectFields(),
     });
 
-    return NextResponse.json(items);
+    return NextResponse.json({
+      success: true,
+      data: items
+    });
   } catch (error) {
     console.error('Error fetching daily soal:', error);
 
     // Handle specific errors
     if (error instanceof Error && error.message === 'User ID is required') {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ error: 'Failed to fetch soal' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch soal' }, { status: 500 });
   }
 }

@@ -142,8 +142,6 @@ export async function GET(request: NextRequest) {
 
     // Calculate pagination meta
     const totalPages = Math.ceil(total / limit)
-    const hasNextPage = page < totalPages
-    const hasPreviousPage = page > 1
 
     return NextResponse.json({
       success: true,
@@ -154,13 +152,11 @@ export async function GET(request: NextRequest) {
         currentStreak: user?.currentStreak || 0,
         lastActive: user?.lastActive?.toISOString() || null
       },
-      meta: {
+      pagination: {
         total,
         page,
         limit,
-        totalPages,
-        hasNextPage,
-        hasPreviousPage
+        totalPages
       }
     })
   } catch (error) {

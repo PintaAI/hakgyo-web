@@ -24,35 +24,39 @@ export async function GET(request: NextRequest) {
     // For now, assuming basic filters are allowed if you have access to the collection
     // But realistically, we should check if user has access to the koleksiSoal parent
 
-    const soals = await prisma.soal.findMany({
-      where,
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
+    const [soals, totalCount] = await Promise.all([
+      prisma.soal.findMany({
+        where,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
           },
-        },
-        opsis: {
-          orderBy: {
-            order: 'asc',
+          opsis: {
+            orderBy: {
+              order: 'asc',
+            },
           },
+          attachments: true,
         },
-        attachments: true,
-      },
-      orderBy: { order: 'asc' },
-      take: limit,
-      skip: offset,
-    });
+        orderBy: { order: 'asc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.soal.count({ where })
+    ]);
 
     return NextResponse.json({
       success: true,
       data: soals,
-      meta: {
-        total: soals.length, // approximation without extra count query for filtered
-        offset,
-        limit,
+      pagination: {
+        total: totalCount,
+        page: Math.floor(offset / (limit || 20)) + 1,
+        limit: limit || 20,
+        totalPages: Math.ceil(totalCount / (limit || 20)),
       },
     });
   } catch (error) {

@@ -56,6 +56,19 @@ export async function GET(
       offset
     });
 
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        data: result.data,
+        pagination: {
+          total: result.meta.total,
+          page: Math.floor(result.meta.offset / (result.meta.limit || 12)) + 1,
+          limit: result.meta.limit || 12,
+          totalPages: Math.ceil(result.meta.total / (result.meta.limit || 12))
+        }
+      });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error('Get joined kelas error:', error)

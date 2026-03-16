@@ -85,7 +85,8 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({
-      posts: postsWithLikeStatus,
+      success: true,
+      data: postsWithLikeStatus,
       pagination: {
         page,
         limit,
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching posts:', error);
-    return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch posts' }, { status: 500 });
   }
 }
 
@@ -182,12 +183,15 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json({
-      ...post,
-      gamification: gamificationResult.success ? gamificationResult.data : undefined
+      success: true,
+      data: {
+        ...post,
+        gamification: gamificationResult.success ? gamificationResult.data : undefined
+      }
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating post:', error);
-    return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to create post' }, { status: 500 });
   } finally {
     // Always release the lock if session exists
     const session = await auth.api.getSession({ headers: request.headers });

@@ -34,7 +34,7 @@ The [`materiApi`](packages/hakgyo-expo-sdk/src/api/materi.ts:5) object provides 
 Retrieves a single material by its ID.
 
 ```typescript
-const materi = await materiApi.get(1);
+const response = await materiApi.get(1);
 ```
 
 **Parameters:**
@@ -43,31 +43,28 @@ const materi = await materiApi.get(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the material |
 
-**Returns:** `Promise<Materi>`
+**Returns:** `Promise<ApiResponse<Materi>>`
 
 **Example Response:**
 
 ```json
 {
-  "id": 1,
-  "title": "Korean Alphabet - Hangul",
-  "description": "Learn the basics of Korean writing system",
-  "jsonDescription": { "type": "doc", "content": [...] },
-  "htmlDescription": "<p>Learn the basics of Korean writing system</p>",
-  "order": 1,
-  "isDemo": false,
-  "isDraft": false,
-  "koleksiSoalId": 5,
-  "passingScore": 70,
-  "kelasId": 1,
-  "kelas": {
+  "success": true,
+  "data": {
     "id": 1,
-    "title": "Korean for Beginners",
-    "type": "REGULAR",
-    "level": "BEGINNER"
-  },
-  "createdAt": "2024-01-15T10:00:00Z",
-  "updatedAt": "2024-01-20T15:30:00Z"
+    "title": "Korean Alphabet - Hangul",
+    "description": "Learn the basics of Korean writing system",
+    "jsonDescription": { "type": "doc", "content": [] },
+    "htmlDescription": "<p>Learn the basics of Korean writing system</p>",
+    "order": 1,
+    "isDemo": false,
+    "isDraft": false,
+    "koleksiSoalId": 5,
+    "passingScore": 70,
+    "kelasId": 1,
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-20T15:30:00Z"
+  }
 }
 ```
 
@@ -78,7 +75,7 @@ const materi = await materiApi.get(1);
 Marks a material as completed by the current user. This is typically called when a student finishes reading or studying a material.
 
 ```typescript
-await materiApi.complete(1);
+const response = await materiApi.complete(1);
 ```
 
 **Parameters:**
@@ -87,21 +84,20 @@ await materiApi.complete(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the material to mark as complete |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<MateriCompletionResponse>>`
 
-**Example Usage:**
+**Example Response:**
 
-```typescript
-// After the user finishes studying the material
-try {
-  await materiApi.complete(materiId);
-  console.log('Material marked as complete!');
-  
-  // Optionally refresh the kelas progress
-  const progress = await kelasApi.getProgress(kelasId);
-  updateProgressDisplay(progress);
-} catch (error) {
-  console.error('Failed to complete material:', error);
+```json
+{
+  "success": true,
+  "data": {
+    "completion": { "id": 1, "isCompleted": true, "assessmentPassed": false },
+    "materiId": 1,
+    "materiTitle": "Hangul Basics",
+    "nextMateri": { "id": 2, "title": "Pronunciation", "order": 2 },
+    "gamification": { "totalXP": 100 }
+  }
 }
 ```
 
@@ -112,10 +108,10 @@ try {
 Submits answers for a material's assessment (quiz). The assessment is linked to the material through `koleksiSoalId`.
 
 ```typescript
-const result = await materiApi.submitAssessment(1, [
-  { questionId: 1, answerId: 3 },
-  { questionId: 2, answerId: 5 },
-  { questionId: 3, answerId: 1 }
+const response = await materiApi.submitAssessment(1, [
+  { soalId: 1, selectedOptionId: 3 },
+  { soalId: 2, selectedOptionId: 5 },
+  { soalId: 3, selectedOptionId: 1 }
 ]);
 ```
 
@@ -124,20 +120,24 @@ const result = await materiApi.submitAssessment(1, [
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the material |
-| `answers` | `Array<{ questionId: number, answerId: number }>` | Array of answers submitted by the user |
+| `answers` | `Array<{ soalId: number, selectedOptionId: number }>` | Array of answers submitted by the user |
 
-**Returns:** `Promise<any>` - Assessment result including score and pass/fail status
+**Returns:** `Promise<ApiResponse<MateriAssessmentResult>>`
 
 **Example Response:**
 
 ```json
 {
-  "passed": true,
-  "score": 85,
-  "totalQuestions": 10,
-  "correctAnswers": 8,
-  "passingScore": 70,
-  "completedAt": "2024-01-20T16:00:00Z"
+  "success": true,
+  "data": {
+    "score": 85,
+    "isPassed": true,
+    "correctAnswers": 8,
+    "totalQuestions": 10,
+    "passingScore": 70,
+    "nextMateriUnlocked": 2,
+    "gamification": { "assessment": { "totalXP": 50 } }
+  }
 }
 ```
 
@@ -145,10 +145,10 @@ const result = await materiApi.submitAssessment(1, [
 
 ### `getAssessmentConfig(id)`
 
-Retrieves the assessment configuration for a material, including questions, options, and passing score.
+Retrieves the assessment configuration for a material, including questions and options.
 
 ```typescript
-const config = await materiApi.getAssessmentConfig(1);
+const response = await materiApi.getAssessmentConfig(1);
 ```
 
 **Parameters:**
@@ -157,28 +157,30 @@ const config = await materiApi.getAssessmentConfig(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the material |
 
-**Returns:** `Promise<any>` - Assessment configuration object
+**Returns:** `Promise<ApiResponse<MateriAssessmentConfig>>`
 
 **Example Response:**
 
 ```json
 {
-  "materiId": 1,
-  "title": "Korean Alphabet Quiz",
-  "passingScore": 70,
-  "questions": [
-    {
-      "id": 1,
-      "pertanyaan": "What is the first letter of Hangul?",
-      "difficulty": "BEGINNER",
-      "opsis": [
-        { "id": 1, "opsiText": "ㄱ", "isCorrect": true, "order": 1 },
-        { "id": 2, "opsiText": "ㄴ", "isCorrect": false, "order": 2 },
-        { "id": 3, "opsiText": "ㅇ", "isCorrect": false, "order": 3 },
-        { "id": 4, "opsiText": "ㅎ", "isCorrect": false, "order": 4 }
-      ]
-    }
-  ]
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Korean Alphabet Quiz",
+    "koleksiSoalId": 5,
+    "passingScore": 70,
+    "questions": [
+      {
+        "id": 1,
+        "pertanyaan": "What is the first letter of Hangul?",
+        "opsi": [
+          { "id": 1, "opsiText": "ㄱ" },
+          { "id": 2, "opsiText": "ㄴ" }
+        ]
+      }
+    ],
+    "canRetake": true
+  }
 }
 ```
 
@@ -594,3 +596,5 @@ function validateAnswers(
 | `POST` | `/api/materi/{id}/complete` | Mark material as complete |
 | `POST` | `/api/materi/{id}/assessment` | Submit assessment answers |
 | `GET` | `/api/materi/{id}/assessment-config` | Get assessment configuration |
+| `GET` | `/api/materi` | List all materials |
+| `POST` | `/api/materi` | Create new material |

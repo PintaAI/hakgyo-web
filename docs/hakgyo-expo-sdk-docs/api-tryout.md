@@ -29,19 +29,13 @@ For setup instructions, see the [Configuration Guide](./config.md).
 Retrieves detailed information about a specific tryout.
 
 ```typescript
-tryoutApi.get(id: number): Promise<Tryout>
+const response = await tryoutApi.get(1);
 ```
 
 **Parameters:**
 - `id` (number): The unique identifier of the tryout
 
-**Returns:** A `Tryout` object containing all tryout details
-
-**Example:**
-```typescript
-const tryout = await tryoutApi.get(1);
-console.log(tryout.nama); // "Midterm Exam - Korean Level 1"
-```
+**Returns:** `Promise<ApiResponse<Tryout>>`
 
 ---
 
@@ -50,65 +44,13 @@ console.log(tryout.nama); // "Midterm Exam - Korean Level 1"
 Retrieves a list of tryouts with optional filtering.
 
 ```typescript
-tryoutApi.list(params?: ListTryoutsParams): Promise<Tryout[]>
+const response = await tryoutApi.list(params?: ListTryoutsParams);
 ```
 
 **Parameters:**
 - `params` (optional): Filter options
-  - `guruId` (string): Filter by teacher ID
-  - `koleksiSoalId` (number): Filter by question collection ID
-  - `kelasId` (number): Filter by class ID
-  - `isActive` (boolean): Filter by active status
-  - `limit` (number): Limit number of results
-  - `userjoinedkelas` (boolean): Only tryouts from user's joined classes
 
-**Returns:** Array of `Tryout` objects
-
-**Example:**
-```typescript
-// Get all tryouts
-const allTryouts = await tryoutApi.list();
-
-// Get active tryouts only
-const activeTryouts = await tryoutApi.list({ isActive: true });
-
-// Get tryouts from a specific teacher
-const teacherTryouts = await tryoutApi.list({ guruId: 'teacher-123' });
-```
-
----
-
-### List Active Tryouts
-
-Retrieves only active tryouts (shorthand for `list({ isActive: true })`).
-
-```typescript
-tryoutApi.listActive(): Promise<Tryout[]>
-```
-
-**Returns:** Array of active `Tryout` objects
-
-**Example:**
-```typescript
-const activeTryouts = await tryoutApi.listActive();
-```
-
----
-
-### List Tryouts from User's Classes
-
-Retrieves tryouts from classes the user has joined.
-
-```typescript
-tryoutApi.listMyKelas(): Promise<Tryout[]>
-```
-
-**Returns:** Array of `Tryout` objects from user's joined classes
-
-**Example:**
-```typescript
-const myClassTryouts = await tryoutApi.listMyKelas();
-```
+**Returns:** `Promise<ApiResponse<Tryout[]>>`
 
 ---
 
@@ -117,39 +59,13 @@ const myClassTryouts = await tryoutApi.listMyKelas();
 Creates a new tryout (teacher only operation).
 
 ```typescript
-tryoutApi.create(data: CreateTryoutDto): Promise<Tryout>
+const response = await tryoutApi.create(data: CreateTryoutDto);
 ```
 
 **Parameters:**
 - `data` (CreateTryoutDto): Tryout creation data
-  - `nama` (string): **Required** - Tryout name/title
-  - `description` (string): Optional description
-  - `startTime` (string): **Required** - Start time in ISO 8601 format
-  - `endTime` (string): **Required** - End time in ISO 8601 format
-  - `duration` (number): Duration in minutes
-  - `maxAttempts` (number): Maximum attempts allowed
-  - `shuffleQuestions` (boolean): Whether to shuffle question order
-  - `passingScore` (number): Minimum score to pass (percentage)
-  - `koleksiSoalId` (number): **Required** - Question collection ID
-  - `isActive` (boolean): Whether tryout is active
 
-**Returns:** The created `Tryout` object
-
-**Example:**
-```typescript
-const newTryout = await tryoutApi.create({
-  nama: "Final Exam - Korean Level 1",
-  description: "Comprehensive final exam covering all topics",
-  startTime: "2024-06-01T09:00:00Z",
-  endTime: "2024-06-01T11:00:00Z",
-  duration: 120,
-  maxAttempts: 2,
-  shuffleQuestions: true,
-  passingScore: 70,
-  koleksiSoalId: 5,
-  isActive: true
-});
-```
+**Returns:** `Promise<ApiResponse<Tryout>>`
 
 ---
 
@@ -158,31 +74,14 @@ const newTryout = await tryoutApi.create({
 Updates an existing tryout (owner only).
 
 ```typescript
-tryoutApi.update(id: number, data: UpdateTryoutDto): Promise<Tryout>
+const response = await tryoutApi.update(id: number, data: UpdateTryoutDto);
 ```
 
 **Parameters:**
 - `id` (number): The tryout ID to update
 - `data` (UpdateTryoutDto): Fields to update
-  - `nama` (string): Tryout name
-  - `description` (string): Description
-  - `startTime` (string): Start time
-  - `endTime` (string): End time
-  - `duration` (number): Duration in minutes
-  - `maxAttempts` (number): Maximum attempts
-  - `shuffleQuestions` (boolean): Shuffle questions
-  - `passingScore` (number): Passing score
-  - `isActive` (boolean): Active status
 
-**Returns:** Updated `Tryout` object
-
-**Example:**
-```typescript
-const updated = await tryoutApi.update(1, {
-  endTime: "2024-06-02T11:00:00Z",
-  maxAttempts: 3
-});
-```
+**Returns:** `Promise<ApiResponse<Tryout>>`
 
 ---
 
@@ -191,18 +90,13 @@ const updated = await tryoutApi.update(1, {
 Deletes a tryout (owner only).
 
 ```typescript
-tryoutApi.delete(id: number): Promise<void>
+const response = await tryoutApi.delete(id: number);
 ```
 
 **Parameters:**
 - `id` (number): The tryout ID to delete
 
-**Returns:** Void
-
-**Example:**
-```typescript
-await tryoutApi.delete(1);
-```
+**Returns:** `Promise<ApiResponse<void>>`
 
 ---
 
@@ -211,19 +105,13 @@ await tryoutApi.delete(1);
 Toggles the active status of a tryout (owner only).
 
 ```typescript
-tryoutApi.toggleActive(id: number): Promise<Tryout>
+const response = await tryoutApi.toggleActive(id: number);
 ```
 
 **Parameters:**
 - `id` (number): The tryout ID
 
-**Returns:** Updated `Tryout` object with toggled status
-
-**Example:**
-```typescript
-const toggled = await tryoutApi.toggleActive(1);
-console.log(toggled.isActive); // Toggled value
-```
+**Returns:** `Promise<ApiResponse<Tryout>>`
 
 ---
 
@@ -232,20 +120,13 @@ console.log(toggled.isActive); // Toggled value
 Starts participation in a tryout. This creates a new attempt for the user.
 
 ```typescript
-tryoutApi.participate(id: number): Promise<TryoutParticipant>
+const response = await tryoutApi.participate(id: number);
 ```
 
 **Parameters:**
 - `id` (number): The tryout ID to participate in
 
-**Returns:** A `TryoutParticipant` object with participation details
-
-**Example:**
-```typescript
-const participation = await tryoutApi.participate(1);
-console.log(participation.status); // "IN_PROGRESS"
-console.log(participation.attemptCount); // 1
-```
+**Returns:** `Promise<ApiResponse<TryoutParticipant>>`
 
 ---
 
@@ -254,56 +135,29 @@ console.log(participation.attemptCount); // 1
 Submits answers for a tryout attempt.
 
 ```typescript
-tryoutApi.submit(tryoutId: number, answers: SubmitTryoutDto['answers']): Promise<TryoutResult>
+const response = await tryoutApi.submit(tryoutId: number, answers: SubmitTryoutDto['answers']);
 ```
 
 **Parameters:**
 - `tryoutId` (number): The tryout ID
 - `answers` (Array): Array of answer objects
-  - `soalId` (number): Question ID
-  - `opsiId` (number): Selected option ID
 
-**Returns:** A `TryoutResult` object with score and details
-
-**Example:**
-```typescript
-const result = await tryoutApi.submit(1, [
-  { soalId: 1, opsiId: 5 },
-  { soalId: 2, opsiId: 8 },
-  { soalId: 3, opsiId: 12 }
-]);
-
-console.log(result.score); // 85
-console.log(result.passed); // true
-```
+**Returns:** `Promise<ApiResponse<TryoutResult>>`
 
 ---
 
 ### Get Tryout Results
 
-Retrieves results for a tryout. Returns either the user's result or all participants' results depending on context.
+Retrieves results for a tryout.
 
 ```typescript
-tryoutApi.getResults(tryoutId: number): Promise<TryoutResult | TryoutParticipant[]>
+const response = await tryoutApi.getResults(tryoutId: number);
 ```
 
 **Parameters:**
 - `tryoutId` (number): The tryout ID
 
-**Returns:** Either a `TryoutResult` (for current user) or array of `TryoutParticipant` objects
-
-**Example:**
-```typescript
-// Get current user's result
-const myResult = await tryoutApi.getResults(1);
-console.log(myResult.score);
-
-// For teachers - get all participants
-const participants = await tryoutApi.getResults(1);
-if (Array.isArray(participants)) {
-  console.log(`Total participants: ${participants.length}`);
-}
-```
+**Returns:** `Promise<ApiResponse<TryoutResult | TryoutParticipant[]>>`
 
 ---
 

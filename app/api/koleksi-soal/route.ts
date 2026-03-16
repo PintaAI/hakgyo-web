@@ -78,45 +78,38 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    const koleksiSoals = await prisma.koleksiSoal.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
+    const [koleksiSoals, totalCount] = await Promise.all([
+      prisma.koleksiSoal.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
           },
-        },
-        kelasKoleksiSoals: {
-          include: {
-            kelas: {
-              select: {
-                id: true,
-                title: true,
-                level: true,
-              },
+          _count: {
+            select: {
+              soals: true,
             },
           },
         },
-        _count: {
-          select: {
-            soals: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-    })
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.koleksiSoal.count({ where })
+    ])
 
     return NextResponse.json({
       success: true,
       data: koleksiSoals,
-      meta: {
-        total: koleksiSoals.length,
-        offset,
-        limit,
+      pagination: {
+        total: totalCount,
+        page: Math.floor(offset / (limit || 10)) + 1,
+        limit: limit || 10,
+        totalPages: Math.ceil(totalCount / (limit || 10)),
       },
     })
   } catch (error) {

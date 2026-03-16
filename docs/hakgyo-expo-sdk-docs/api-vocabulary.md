@@ -51,7 +51,7 @@ const response = await vocabularyApi.listSets({
 |-----------|------|-------------|
 | `params` | [`QueryParams`](#queryparams) | Optional query parameters for filtering, pagination, and sorting |
 
-**Returns:** `Promise<PaginatedResponse<VocabularySet>>`
+**Returns:** `Promise<ApiResponse<VocabularySet[], PaginatedMeta>>`
 
 ---
 
@@ -60,7 +60,7 @@ const response = await vocabularyApi.listSets({
 Retrieves a single vocabulary set by its ID.
 
 ```typescript
-const vocabSet = await vocabularyApi.getSet(1);
+const response = await vocabularyApi.getSet(1);
 ```
 
 **Parameters:**
@@ -69,7 +69,7 @@ const vocabSet = await vocabularyApi.getSet(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the vocabulary set |
 
-**Returns:** `Promise<VocabularySet>`
+**Returns:** `Promise<ApiResponse<VocabularySet>>`
 
 ---
 
@@ -78,7 +78,7 @@ const vocabSet = await vocabularyApi.getSet(1);
 Creates a new vocabulary set.
 
 ```typescript
-const newSet = await vocabularyApi.createSet({
+const response = await vocabularyApi.createSet({
   title: 'Korean Basics - Numbers',
   description: 'Essential Korean numbers 1-100',
   icon: '🔢',
@@ -93,7 +93,7 @@ const newSet = await vocabularyApi.createSet({
 |-----------|------|-------------|
 | `data` | `Partial<VocabularySet>` | The vocabulary set data to create |
 
-**Returns:** `Promise<VocabularySet>`
+**Returns:** `Promise<ApiResponse<VocabularySet>>`
 
 ---
 
@@ -102,7 +102,7 @@ const newSet = await vocabularyApi.createSet({
 Updates an existing vocabulary set.
 
 ```typescript
-const updatedSet = await vocabularyApi.updateSet(1, {
+const response = await vocabularyApi.updateSet(1, {
   title: 'Korean Basics - Numbers (Updated)',
   description: 'Essential Korean numbers 1-100 with audio'
 });
@@ -115,7 +115,7 @@ const updatedSet = await vocabularyApi.updateSet(1, {
 | `id` | `number` | The unique identifier of the vocabulary set |
 | `data` | `Partial<VocabularySet>` | The updated vocabulary set data |
 
-**Returns:** `Promise<VocabularySet>`
+**Returns:** `Promise<ApiResponse<VocabularySet>>`
 
 ---
 
@@ -124,7 +124,7 @@ const updatedSet = await vocabularyApi.updateSet(1, {
 Deletes a vocabulary set.
 
 ```typescript
-await vocabularyApi.deleteSet(1);
+const response = await vocabularyApi.deleteSet(1);
 ```
 
 **Parameters:**
@@ -133,7 +133,7 @@ await vocabularyApi.deleteSet(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the vocabulary set |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<void>>`
 
 ---
 
@@ -161,7 +161,7 @@ const response = await vocabularyApi.listItems({
 |-----------|------|-------------|
 | `params` | `QueryParams & { creatorId?: string; collectionId?: string; type?: string; pos?: string; isLearned?: boolean; search?: string }` | Optional query parameters including filtering by collection, type, part of speech, learned status, and search term |
 
-**Returns:** `Promise<PaginatedResponse<VocabularyItem>>`
+**Returns:** `Promise<ApiResponse<VocabularyItem[], PaginatedMeta>>`
 
 ---
 
@@ -170,7 +170,7 @@ const response = await vocabularyApi.listItems({
 Retrieves a single vocabulary item by its ID.
 
 ```typescript
-const item = await vocabularyApi.getItem(1);
+const response = await vocabularyApi.getItem(1);
 ```
 
 **Parameters:**
@@ -179,7 +179,7 @@ const item = await vocabularyApi.getItem(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the vocabulary item |
 
-**Returns:** `Promise<VocabularyItem>`
+**Returns:** `Promise<ApiResponse<VocabularyItem>>`
 
 ---
 
@@ -188,7 +188,7 @@ const item = await vocabularyApi.getItem(1);
 Adds a new vocabulary item to a set.
 
 ```typescript
-const newItem = await vocabularyApi.addItem(1, {
+const response = await vocabularyApi.addItem(1, {
   korean: '안녕하세요',
   indonesian: 'Halo / Selamat datang',
   type: 'WORD',
@@ -206,7 +206,7 @@ const newItem = await vocabularyApi.addItem(1, {
 | `setId` | `number` | The ID of the vocabulary set to add the item to |
 | `data` | `Partial<VocabularyItem>` | The vocabulary item data to create |
 
-**Returns:** `Promise<VocabularyItem>`
+**Returns:** `Promise<ApiResponse<VocabularyItem>>`
 
 ---
 
@@ -215,7 +215,7 @@ const newItem = await vocabularyApi.addItem(1, {
 Updates an existing vocabulary item.
 
 ```typescript
-const updatedItem = await vocabularyApi.updateItem(1, {
+const response = await vocabularyApi.updateItem(1, {
   indonesian: 'Halo (sapaan formal)',
   exampleSentences: [
     '안녕하세요, 만나서 반갑습니다.',
@@ -231,7 +231,7 @@ const updatedItem = await vocabularyApi.updateItem(1, {
 | `id` | `number` | The unique identifier of the vocabulary item |
 | `data` | `Partial<VocabularyItem>` | The updated vocabulary item data |
 
-**Returns:** `Promise<VocabularyItem>`
+**Returns:** `Promise<ApiResponse<VocabularyItem>>`
 
 ---
 
@@ -240,7 +240,7 @@ const updatedItem = await vocabularyApi.updateItem(1, {
 Deletes a vocabulary item.
 
 ```typescript
-await vocabularyApi.deleteItem(1);
+const response = await vocabularyApi.deleteItem(1);
 ```
 
 **Parameters:**
@@ -249,7 +249,7 @@ await vocabularyApi.deleteItem(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the vocabulary item |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<void>>`
 
 ---
 
@@ -260,7 +260,7 @@ await vocabularyApi.deleteItem(1);
 Marks a vocabulary item as learned.
 
 ```typescript
-const progress = await vocabularyApi.markLearned(1);
+const response = await vocabularyApi.markLearned(1);
 ```
 
 **Parameters:**
@@ -269,7 +269,7 @@ const progress = await vocabularyApi.markLearned(1);
 |-----------|------|-------------|
 | `itemId` | `number` | The unique identifier of the vocabulary item |
 
-**Returns:** `Promise<VocabularyItemProgress>`
+**Returns:** `Promise<ApiResponse<VocabularyItemProgress>>`
 
 ---
 
@@ -278,7 +278,7 @@ const progress = await vocabularyApi.markLearned(1);
 Marks a vocabulary item as not learned (resets progress).
 
 ```typescript
-const progress = await vocabularyApi.markUnlearned(1);
+const response = await vocabularyApi.markUnlearned(1);
 ```
 
 **Parameters:**
@@ -287,7 +287,7 @@ const progress = await vocabularyApi.markUnlearned(1);
 |-----------|------|-------------|
 | `itemId` | `number` | The unique identifier of the vocabulary item |
 
-**Returns:** `Promise<VocabularyItemProgress>`
+**Returns:** `Promise<ApiResponse<VocabularyItemProgress>>`
 
 ---
 
@@ -296,7 +296,7 @@ const progress = await vocabularyApi.markUnlearned(1);
 Sets the learned status of a vocabulary item.
 
 ```typescript
-const progress = await vocabularyApi.setLearnedStatus(1, true);
+const response = await vocabularyApi.setLearnedStatus(1, true);
 ```
 
 **Parameters:**
@@ -306,7 +306,7 @@ const progress = await vocabularyApi.setLearnedStatus(1, true);
 | `itemId` | `number` | The unique identifier of the vocabulary item |
 | `isLearned` | `boolean` | Whether the item should be marked as learned |
 
-**Returns:** `Promise<VocabularyItemProgress>`
+**Returns:** `Promise<ApiResponse<VocabularyItemProgress>>`
 
 ---
 
@@ -317,7 +317,7 @@ const progress = await vocabularyApi.setLearnedStatus(1, true);
 Retrieves daily vocabulary for consistent learning.
 
 ```typescript
-const dailyWords = await vocabularyApi.getDaily({
+const response = await vocabularyApi.getDaily({
   userId: 'user-123',
   take: 10
 });
@@ -329,7 +329,7 @@ const dailyWords = await vocabularyApi.getDaily({
 |-----------|------|-------------|
 | `params` | `{ userId: string; take?: number }` | User ID and optional number of items to retrieve |
 
-**Returns:** `Promise<VocabularyItem[]>`
+**Returns:** `Promise<ApiResponse<VocabularyItem[]>>`
 
 ---
 

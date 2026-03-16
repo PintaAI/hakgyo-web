@@ -128,46 +128,45 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const vocabularySets = await prisma.vocabularySet.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true
-          }
-        },
-        kelasVocabularySets: {
-          include: {
-            kelas: {
-              select: {
-                id: true,
-                title: true,
-                type: true,
-                level: true,
-                isDraft: true
+    const [vocabularySets, totalCount] = await Promise.all([
+      prisma.vocabularySet.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true
+            }
+          },
+          kelasVocabularySets: {
+            include: {
+              kelas: {
+                select: {
+                  id: true,
+                  title: true,
+                  type: true,
+                  level: true,
+                  isDraft: true
+                }
               }
+            }
+          },
+          _count: {
+            select: {
+              items: true
             }
           }
         },
-        _count: {
-          select: {
-            items: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset
-    })
-
-  
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset
+      }),
+      prisma.vocabularySet.count({ where })
+    ])
 
     // Process vocabulary sets to add counts
-    // Note: We don't filter by kelas.isDraft here anymore because it's handled in the query
-    // ensuring owners can see their sets in draft classes, but others only see published ones
     const filteredVocabularySets = await Promise.all(
       vocabularySets.map(async (set) => {
         // Get learned count for this set based on user's progress
@@ -198,10 +197,10 @@ export async function GET(request: NextRequest) {
       success: true,
       data: filteredVocabularySets,
       pagination: {
+        total: totalCount,
         page: Math.floor(offset / (limit || 10)) + 1,
         limit: limit || 10,
-        total: filteredVocabularySets.length,
-        totalPages: Math.ceil(filteredVocabularySets.length / (limit || 10))
+        totalPages: Math.ceil(totalCount / (limit || 10))
       }
     })
   } catch (error) {

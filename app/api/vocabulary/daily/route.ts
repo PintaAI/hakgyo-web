@@ -79,10 +79,13 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    return NextResponse.json(items);
+    return NextResponse.json({
+      success: true,
+      data: items
+    });
   } catch (error) {
     console.error('Error fetching daily vocabulary:', error);
-    return NextResponse.json({ error: 'Failed to fetch vocabulary' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch vocabulary' }, { status: 500 });
   }
 }
 

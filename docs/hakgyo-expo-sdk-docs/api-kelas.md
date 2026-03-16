@@ -49,7 +49,7 @@ const response = await kelasApi.list({
 |-----------|------|-------------|
 | `params` | [`QueryParams`](#queryparams) | Optional query parameters for filtering, pagination, and sorting |
 
-**Returns:** `Promise<PaginatedResponse<Kelas>>`
+**Returns:** `Promise<ApiResponse<Kelas[], PaginatedMeta>>`
 
 **Example Response:**
 
@@ -70,11 +70,10 @@ const response = await kelasApi.list({
       "updatedAt": "2024-01-15T10:00:00Z"
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
+  "meta": {
     "total": 50,
-    "totalPages": 5
+    "offset": 0,
+    "limit": 10
   }
 }
 ```
@@ -86,7 +85,7 @@ const response = await kelasApi.list({
 Retrieves a single class by its ID.
 
 ```typescript
-const kelas = await kelasApi.get(1);
+const response = await kelasApi.get(1);
 ```
 
 **Parameters:**
@@ -95,7 +94,26 @@ const kelas = await kelasApi.get(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the class |
 
-**Returns:** `Promise<Kelas>`
+**Returns:** `Promise<ApiResponse<Kelas & { isEnrolled: boolean }>>`
+
+**Example Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Korean for Beginners",
+    "description": "Learn Korean from scratch",
+    "type": "REGULAR",
+    "level": "BEGINNER",
+    "isEnrolled": true,
+    "authorId": "user-123",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  }
+}
+```
 
 ---
 
@@ -104,7 +122,7 @@ const kelas = await kelasApi.get(1);
 Creates a new class.
 
 ```typescript
-const newKelas = await kelasApi.create({
+const response = await kelasApi.create({
   title: "Advanced Korean Grammar",
   description: "Master Korean grammar structures",
   type: "REGULAR",
@@ -121,7 +139,7 @@ const newKelas = await kelasApi.create({
 |-----------|------|-------------|
 | `data` | [`Partial<Kelas>`](#kelas) | The class data to create |
 
-**Returns:** `Promise<Kelas>`
+**Returns:** `Promise<ApiResponse<Kelas>>`
 
 ---
 
@@ -130,7 +148,7 @@ const newKelas = await kelasApi.create({
 Updates an existing class.
 
 ```typescript
-const updatedKelas = await kelasApi.update(1, {
+const response = await kelasApi.update(1, {
   title: "Advanced Korean Grammar - Updated",
   description: "Updated description"
 });
@@ -143,7 +161,7 @@ const updatedKelas = await kelasApi.update(1, {
 | `id` | `number` | The unique identifier of the class |
 | `data` | [`Partial<Kelas>`](#kelas) | The updated class data |
 
-**Returns:** `Promise<Kelas>`
+**Returns:** `Promise<ApiResponse<Kelas>>`
 
 ---
 
@@ -152,7 +170,7 @@ const updatedKelas = await kelasApi.update(1, {
 Deletes a class.
 
 ```typescript
-await kelasApi.delete(1);
+const response = await kelasApi.delete(1);
 ```
 
 **Parameters:**
@@ -161,7 +179,7 @@ await kelasApi.delete(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the class |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<void>>`
 
 ---
 
@@ -170,10 +188,10 @@ await kelasApi.delete(1);
 Enrolls the current user in a class.
 
 ```typescript
-const result = await kelasApi.enroll(1);
+const response = await kelasApi.enroll(1);
 
 // With options
-const resultWithOptions = await kelasApi.enroll(1, {
+const responseWithOptions = await kelasApi.enroll(1, {
   bypassPaymentCheck: true
 });
 ```
@@ -185,7 +203,7 @@ const resultWithOptions = await kelasApi.enroll(1, {
 | `id` | `number` | The unique identifier of the class |
 | `options` | [`EnrollOptions`](#enrolloptions) | Optional enrollment options |
 
-**Returns:** `Promise<{ success: boolean; enrolled: boolean; message?: string }>`
+**Returns:** `Promise<ApiResponse<{ enrolled: boolean; message?: string }>>`
 
 ---
 
@@ -194,7 +212,7 @@ const resultWithOptions = await kelasApi.enroll(1, {
 Unenrolls the current user from a class.
 
 ```typescript
-const result = await kelasApi.unenroll(1);
+const response = await kelasApi.unenroll(1);
 ```
 
 **Parameters:**
@@ -203,7 +221,7 @@ const result = await kelasApi.unenroll(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the class |
 
-**Returns:** `Promise<{ success: boolean; enrolled: boolean; message?: string }>`
+**Returns:** `Promise<ApiResponse<{ enrolled: boolean; message?: string }>>`
 
 ---
 
@@ -212,7 +230,7 @@ const result = await kelasApi.unenroll(1);
 Retrieves the current user's progress in a class, including material completion status and assessment scores.
 
 ```typescript
-const progress = await kelasApi.getProgress(1);
+const response = await kelasApi.getProgress(1);
 ```
 
 **Parameters:**
@@ -221,30 +239,33 @@ const progress = await kelasApi.getProgress(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the class |
 
-**Returns:** `Promise<KelasProgressResponse>`
+**Returns:** `Promise<ApiResponse<KelasProgressResponse>>`
 
 **Example Response:**
 
 ```json
 {
-  "materis": [
-    {
-      "id": 1,
-      "title": "Lesson 1: Hangul",
-      "order": 1,
-      "isAccessible": true,
-      "isCompleted": true,
-      "isFullyCompleted": true,
-      "hasAssessment": true,
-      "assessmentPassed": true,
-      "score": 90,
-      "canRetake": true
+  "success": true,
+  "data": {
+    "materis": [
+      {
+        "id": 1,
+        "title": "Lesson 1: Hangul",
+        "order": 1,
+        "isAccessible": true,
+        "isCompleted": true,
+        "isFullyCompleted": true,
+        "hasAssessment": true,
+        "assessmentPassed": true,
+        "score": 90,
+        "canRetake": true
+      }
+    ],
+    "overallProgress": {
+      "completedCount": 5,
+      "totalCount": 10,
+      "completionPercentage": 50
     }
-  ],
-  "overallProgress": {
-    "completedCount": 5,
-    "totalCount": 10,
-    "completionPercentage": 50
   }
 }
 ```
@@ -256,7 +277,7 @@ const progress = await kelasApi.getProgress(1);
 Retrieves question collections linked to a class. Requires GURU or ADMIN role.
 
 ```typescript
-const collections = await kelasApi.getSoalCollections(1);
+const response = await kelasApi.getSoalCollections(1);
 ```
 
 **Parameters:**
@@ -265,7 +286,7 @@ const collections = await kelasApi.getSoalCollections(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the class |
 
-**Returns:** `Promise<any[]>`
+**Returns:** `Promise<ApiResponse<any[]>>`
 
 ---
 
@@ -291,6 +312,7 @@ interface Kelas {
   discount?: string;
   promoCode?: string;
   isDraft: boolean;
+  isEnrolled?: boolean;
   authorId: string;
   author?: User;
   createdAt: string;
@@ -363,10 +385,15 @@ interface QueryParams {
 | Property | Type | Description |
 |----------|------|-------------|
 | `page` | `number?` | Page number (1-indexed) |
-| `limit` | `number?` | Number of items per page |
+| `limit` | `number?` | Number of items per page (defaults to 10) |
+| `offset` | `number?` | Number of items to skip (alternative to page) |
 | `sortBy` | `string?` | Field to sort by |
 | `sortOrder` | `'asc' \| 'desc'?` | Sort direction |
 | `search` | `string?` | Search query string |
+| `type` | `string?` | Filter by class type |
+| `level` | `string?` | Filter by difficulty level |
+| `authorId` | `string?` | Filter by author ID |
+| `authorEmail` | `string?` | Filter by author email |
 
 ---
 

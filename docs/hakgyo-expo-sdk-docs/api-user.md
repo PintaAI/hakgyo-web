@@ -35,32 +35,34 @@ The [`userApi`](packages/hakgyo-expo-sdk/src/api/user.ts:6) object provides the 
 Retrieves the current authenticated user's profile.
 
 ```typescript
-const user = await userApi.getProfile();
+const response = await userApi.getProfile();
 ```
 
 **Parameters:** None
 
-**Returns:** `Promise<User>`
+**Returns:** `Promise<ApiResponse<User>>`
 
 **Example Response:**
 
 ```json
 {
-  "id": "user-123",
-  "email": "john@example.com",
-  "name": "John Doe",
-  "role": "MURID",
-  "currentStreak": 5,
-  "longestStreak": 15,
-  "xp": 1250,
-  "level": 12,
-  "image": "https://example.com/avatar.jpg",
-  "bio": "Korean language enthusiast",
-  "emailVerified": true,
-  "createdAt": "2024-01-15T10:00:00Z",
-  "updatedAt": "2024-03-10T14:30:00Z",
-  "lastActive": "2024-03-14T09:00:00Z",
-  "accessTier": "PREMIUM"
+  "success": true,
+  "data": {
+    "id": "user-123",
+    "email": "john@example.com",
+    "name": "John Doe",
+    "role": "MURID",
+    "currentStreak": 5,
+    "longestStreak": 15,
+    "xp": 1250,
+    "level": 12,
+    "image": "https://example.com/avatar.jpg",
+    "bio": "Korean language enthusiast",
+    "emailVerified": true,
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-03-10T14:30:00Z",
+    "lastActive": "2024-03-14T09:00:00Z"
+  }
 }
 ```
 
@@ -71,7 +73,7 @@ const user = await userApi.getProfile();
 Updates the current user's profile with the provided data.
 
 ```typescript
-const updatedUser = await userApi.updateProfile({
+const response = await userApi.updateProfile({
   name: 'John Smith',
   bio: 'Updated bio'
 });
@@ -83,17 +85,7 @@ const updatedUser = await userApi.updateProfile({
 |-----------|------|-------------|
 | `data` | `Partial<User>` | Partial user object containing fields to update |
 
-**Returns:** `Promise<User>` - The updated user object
-
-**Example Request:**
-
-```typescript
-await userApi.updateProfile({
-  name: 'New Name',
-  bio: 'New bio description',
-  image: 'https://example.com/new-avatar.jpg'
-});
-```
+**Returns:** `Promise<ApiResponse<User>>` - The updated user object
 
 ---
 
@@ -102,7 +94,7 @@ await userApi.updateProfile({
 Retrieves all classes a user is enrolled in.
 
 ```typescript
-const classes = await userApi.getClasses('user-123');
+const response = await userApi.getClasses('user-123');
 ```
 
 **Parameters:**
@@ -111,39 +103,7 @@ const classes = await userApi.getClasses('user-123');
 |-----------|------|-------------|
 | `userId` | `string` | The ID of the user whose classes to retrieve |
 
-**Returns:** `Promise<Kelas[]>`
-
-**Example Response:**
-
-```json
-[
-  {
-    "id": 1,
-    "title": "Korean for Beginners",
-    "description": "Learn Korean from scratch",
-    "type": "REGULAR",
-    "level": "BEGINNER",
-    "isPaidClass": false,
-    "isDraft": false,
-    "authorId": "user-456",
-    "createdAt": "2024-01-15T10:00:00Z",
-    "updatedAt": "2024-01-15T10:00:00Z"
-  },
-  {
-    "id": 2,
-    "title": "Advanced Korean Grammar",
-    "description": "Master complex grammar patterns",
-    "type": "REGULAR",
-    "level": "ADVANCED",
-    "isPaidClass": true,
-    "price": "29.99",
-    "isDraft": false,
-    "authorId": "user-789",
-    "createdAt": "2024-02-01T10:00:00Z",
-    "updatedAt": "2024-02-01T10:00:00Z"
-  }
-]
-```
+**Returns:** `Promise<ApiResponse<Kelas[], PaginatedMeta>>`
 
 ---
 
@@ -152,7 +112,7 @@ const classes = await userApi.getClasses('user-123');
 Retrieves all tryout results for a specific user.
 
 ```typescript
-const results = await userApi.getTryoutResults('user-123');
+const response = await userApi.getTryoutResults('user-123');
 ```
 
 **Parameters:**
@@ -161,55 +121,19 @@ const results = await userApi.getTryoutResults('user-123');
 |-----------|------|-------------|
 | `userId` | `string` | The ID of the user whose tryout results to retrieve |
 
-**Returns:** `Promise<TryoutResult[]>`
-
-**Example Response:**
-
-```json
-[
-  {
-    "id": 1,
-    "tryoutId": 10,
-    "userId": "user-123",
-    "score": 85,
-    "totalQuestions": 50,
-    "correctAnswers": 42,
-    "timeSpent": 1800,
-    "submittedAt": "2024-03-01T14:00:00Z",
-    "rank": 5,
-    "tryout": {
-      "id": 10,
-      "nama": "Monthly Korean Test",
-      "duration": 60
-    }
-  },
-  {
-    "id": 2,
-    "tryoutId": 11,
-    "userId": "user-123",
-    "score": 92,
-    "totalQuestions": 50,
-    "correctAnswers": 46,
-    "timeSpent": 1650,
-    "submittedAt": "2024-03-15T14:00:00Z",
-    "rank": 2,
-    "tryout": {
-      "id": 11,
-      "nama": "Advanced Grammar Test",
-      "duration": 45
-    }
-  }
-]
-```
+**Returns:** `Promise<ApiResponse<TryoutResult[]>>`
 
 ---
 
-### `registerPushToken(token)`
+### `registerPushToken(token, options?)`
 
 Registers a push notification token for the current user to receive notifications.
 
 ```typescript
-await userApi.registerPushToken('ExponentPushToken[xxxxxxxxxxxx]');
+const response = await userApi.registerPushToken('ExponentPushToken[xxxxxxxxxxxx]', {
+  deviceId: 'unique-device-id',
+  deviceType: 'ios'
+});
 ```
 
 **Parameters:**
@@ -217,20 +141,9 @@ await userApi.registerPushToken('ExponentPushToken[xxxxxxxxxxxx]');
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `token` | `string` | The push token from Expo/React Native |
+| `options` | `object` | Optional device ID and type ('ios' or 'android') |
 
-**Returns:** `Promise<void>`
-
-**Example:**
-
-```typescript
-import * as Notifications from 'expo-notifications';
-
-// Get the push token
-const { data: pushToken } = await Notifications.getExpoPushTokenAsync();
-
-// Register it with the API
-await userApi.registerPushToken(pushToken);
-```
+**Returns:** `Promise<ApiResponse<any>>`
 
 ---
 

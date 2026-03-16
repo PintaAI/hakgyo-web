@@ -48,7 +48,7 @@ const response = await postsApi.list({
 |-----------|------|-------------|
 | `params` | [`QueryParams`](#queryparams) | Optional query parameters for filtering, pagination, and sorting |
 
-**Returns:** `Promise<PaginatedResponse<Post>>`
+**Returns:** `Promise<ApiResponse<Post[], PaginatedMeta>>`
 
 **Example Response:**
 
@@ -90,7 +90,7 @@ const response = await postsApi.list({
 Retrieves a single post by its ID.
 
 ```typescript
-const post = await postsApi.get(1);
+const response = await postsApi.get(1);
 ```
 
 **Parameters:**
@@ -99,7 +99,7 @@ const post = await postsApi.get(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the post |
 
-**Returns:** `Promise<Post>`
+**Returns:** `Promise<ApiResponse<Post>>`
 
 ---
 
@@ -108,7 +108,7 @@ const post = await postsApi.get(1);
 Creates a new post.
 
 ```typescript
-const newPost = await postsApi.create({
+const response = await postsApi.create({
   title: 'My New Post',
   description: 'This is the content of my post',
   type: 'DISCUSSION',
@@ -124,7 +124,7 @@ const newPost = await postsApi.create({
 |-----------|------|-------------|
 | `data` | `Partial<Post>` | The post data to create |
 
-**Returns:** `Promise<Post>`
+**Returns:** `Promise<ApiResponse<Post>>`
 
 ---
 
@@ -133,7 +133,7 @@ const newPost = await postsApi.create({
 Updates an existing post.
 
 ```typescript
-const updatedPost = await postsApi.update(1, {
+const response = await postsApi.update(1, {
   title: 'Updated Title',
   description: 'Updated content'
 });
@@ -146,7 +146,7 @@ const updatedPost = await postsApi.update(1, {
 | `id` | `number` | The unique identifier of the post to update |
 | `data` | `Partial<Post>` | The fields to update |
 
-**Returns:** `Promise<Post>`
+**Returns:** `Promise<ApiResponse<Post>>`
 
 ---
 
@@ -155,7 +155,7 @@ const updatedPost = await postsApi.update(1, {
 Deletes a post.
 
 ```typescript
-await postsApi.delete(1);
+const response = await postsApi.delete(1);
 ```
 
 **Parameters:**
@@ -164,7 +164,7 @@ await postsApi.delete(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the post to delete |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<void>>`
 
 ---
 
@@ -173,7 +173,7 @@ await postsApi.delete(1);
 Likes a post.
 
 ```typescript
-await postsApi.like(1);
+const response = await postsApi.like(1);
 ```
 
 **Parameters:**
@@ -182,7 +182,7 @@ await postsApi.like(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the post to like |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<{ liked: boolean; message: string }>>`
 
 ---
 
@@ -191,7 +191,7 @@ await postsApi.like(1);
 Unlikes a post (removes the like).
 
 ```typescript
-await postsApi.unlike(1);
+const response = await postsApi.unlike(1);
 ```
 
 **Parameters:**
@@ -200,7 +200,7 @@ await postsApi.unlike(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the post to unlike |
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<ApiResponse<{ liked: boolean; message: string }>>`
 
 ---
 
@@ -209,7 +209,7 @@ await postsApi.unlike(1);
 Retrieves all comments for a specific post.
 
 ```typescript
-const comments = await postsApi.getComments(1);
+const response = await postsApi.getComments(1);
 ```
 
 **Parameters:**
@@ -218,7 +218,7 @@ const comments = await postsApi.getComments(1);
 |-----------|------|-------------|
 | `id` | `number` | The unique identifier of the post |
 
-**Returns:** `Promise<Comment[]>`
+**Returns:** `Promise<ApiResponse<Comment[]>>`
 
 ---
 
@@ -227,7 +227,7 @@ const comments = await postsApi.getComments(1);
 Adds a new comment to a post.
 
 ```typescript
-const comment = await postsApi.addComment(1, 'Great post! Thanks for sharing.');
+const response = await postsApi.addComment(1, 'Great post! Thanks for sharing.');
 ```
 
 **Parameters:**
@@ -237,7 +237,7 @@ const comment = await postsApi.addComment(1, 'Great post! Thanks for sharing.');
 | `id` | `number` | The unique identifier of the post |
 | `content` | `string` | The comment content |
 
-**Returns:** `Promise<Comment>`
+**Returns:** `Promise<ApiResponse<Comment>>`
 
 ---
 

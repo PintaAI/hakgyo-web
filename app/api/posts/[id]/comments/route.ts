@@ -57,10 +57,13 @@ export async function GET(
       },
     });
 
-    return NextResponse.json({ comments });
+    return NextResponse.json({
+      success: true,
+      data: comments
+    });
   } catch (error) {
     console.error('Error fetching comments:', error);
-    return NextResponse.json({ error: 'Failed to fetch comments' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch comments' }, { status: 500 });
   }
 }
 
@@ -166,9 +169,12 @@ export async function POST(
       });
     }
 
-    return NextResponse.json(comment, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      data: comment
+    }, { status: 201 });
   } catch (error) {
     console.error('Error creating comment:', error);
-    return NextResponse.json({ error: 'Failed to create comment' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to create comment' }, { status: 500 });
   }
 }

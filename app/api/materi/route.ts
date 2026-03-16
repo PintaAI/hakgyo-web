@@ -14,38 +14,41 @@ export async function GET(request: NextRequest) {
     if (kelasId) where.kelasId = parseInt(kelasId)
     if (isDemo !== null) where.isDemo = isDemo === 'true'
 
-    const materis = await prisma.materi.findMany({
-      where,
-      include: {
-        kelas: {
-          select: {
-            id: true,
-            title: true,
-            type: true,
-            level: true,
-            isDraft: true,
-            author: {
-              select: {
-                id: true,
-                name: true,
-                image: true
+    const [materis, totalCount] = await Promise.all([
+      prisma.materi.findMany({
+        where,
+        include: {
+          kelas: {
+            select: {
+              id: true,
+              title: true,
+              type: true,
+              level: true,
+              isDraft: true,
+              author: {
+                select: {
+                  id: true,
+                  name: true,
+                  image: true
+                }
               }
+            }
+          },
+          _count: {
+            select: {
+              completions: true
             }
           }
         },
-        _count: {
-          select: {
-            completions: true
-          }
-        }
-      },
-      orderBy: [
-        { kelasId: 'asc' },
-        { order: 'asc' }
-      ],
-      take: limit,
-      skip: offset
-    })
+        orderBy: [
+          { kelasId: 'asc' },
+          { order: 'asc' }
+        ],
+        take: limit,
+        skip: offset
+      }),
+      prisma.materi.count({ where })
+    ])
 
     // Filter out materis from draft kelas
     const filteredMateris = materis.filter(materi => !materi.kelas.isDraft)
@@ -53,10 +56,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: filteredMateris,
-      meta: {
-        total: filteredMateris.length,
-        offset,
-        limit
+      pagination: {
+        total: totalCount,
+        page: Math.floor(offset / (limit || 10)) + 1,
+        limit: limit || 10,
+        totalPages: Math.ceil(totalCount / (limit || 10))
       }
     })
   } catch (error) {

@@ -109,7 +109,10 @@ export async function GET(
       canRetake: true // Unlimited retries
     };
 
-    return NextResponse.json(assessment);
+    return NextResponse.json({
+      success: true,
+      data: assessment
+    });
   } catch (error) {
     console.error('Error getting assessment:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -316,7 +319,10 @@ export async function POST(
       gamification: Object.keys(gamificationResults).length > 0 ? gamificationResults : undefined
     };
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      success: true,
+      data: result
+    });
   } catch (error) {
     console.error('Error submitting assessment:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -35,31 +35,36 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    let vocabularyItems = await prisma.vocabularyItem.findMany({
-      where,
-      include: {
-        creator: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true
+    const [vocabularyItems, totalCount] = await Promise.all([
+      prisma.vocabularyItem.findMany({
+        where,
+        include: {
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true
+            }
+          },
+          collection: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              icon: true,
+              isPublic: true
+            }
           }
         },
-        collection: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            icon: true,
-            isPublic: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset
-    })
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset
+      }),
+      prisma.vocabularyItem.count({ where })
+    ])
+
+    let finalItems = vocabularyItems;
 
     // Filter by isLearned if requested and user is authenticated
     if (isLearned !== null && session?.user) {
@@ -71,16 +76,17 @@ export async function GET(request: NextRequest) {
       });
       
       const learnedItemIds = new Set(userProgress.map(p => p.itemId));
-      vocabularyItems = vocabularyItems.filter(item => learnedItemIds.has(item.id));
+      finalItems = vocabularyItems.filter(item => learnedItemIds.has(item.id));
     }
 
     return NextResponse.json({
       success: true,
-      data: vocabularyItems,
-      meta: {
-        total: vocabularyItems.length,
-        offset,
-        limit
+      data: finalItems,
+      pagination: {
+        total: totalCount,
+        page: Math.floor(offset / (limit || 20)) + 1,
+        limit: limit || 20,
+        totalPages: Math.ceil(totalCount / (limit || 20))
       }
     })
   } catch (error) {

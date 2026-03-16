@@ -186,7 +186,6 @@ export class GamificationService {
       }
 
       // Update user's XP, level, and streak
-      const streakChanged = rewardResult.streakData.currentStreak !== user.currentStreak;
       await tx.user.update({
         where: { id: userId },
         data: {
