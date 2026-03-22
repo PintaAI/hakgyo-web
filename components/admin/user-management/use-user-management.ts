@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { UserRoles } from "@prisma/client";
+import { UserRoles } from "@/app/generated/prisma/client";
 import { 
   getAllUsers, 
   updateUser, 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { KelasType, Difficulty } from '@prisma/client'
+import { KelasType, Difficulty } from '@/app/generated/prisma/client'
 
 // GET /api/kelas - Get all classes
 export async function GET(request: NextRequest) {

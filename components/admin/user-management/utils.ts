@@ -1,4 +1,4 @@
-import { UserRoles } from "@prisma/client";
+import { UserRoles } from "@/app/generated/prisma/client";
 import { UserWithStats } from "./types";
 
 export const getRoleBadgeVariant = (role: UserRoles) => {

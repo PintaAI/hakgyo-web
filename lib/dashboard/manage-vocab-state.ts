@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { VocabularyType } from "@prisma/client";
+import { VocabularyType } from "@/app/generated/prisma/client";
 
 interface VocabItem {
   id?: number | string;

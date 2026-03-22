@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { assertAuthenticated } from "@/lib/auth-actions";
-import { Difficulty } from "@prisma/client";
+import { Difficulty } from "@/app/generated/prisma/client";
 import { z } from "zod";
 
 // Assessment collection schemas

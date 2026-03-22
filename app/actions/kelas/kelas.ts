@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { assertAuthenticated } from "@/lib/auth-actions";
-import { KelasType, Difficulty } from "@prisma/client";
+import { KelasType, Difficulty } from "@/app/generated/prisma/client";
 import { z } from "zod";
 
 // Validation schemas

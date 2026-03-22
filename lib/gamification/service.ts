@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@/lib/db';
-import { ActivityType } from '@prisma/client';
+import { ActivityType } from '@/app/generated/prisma/client';
 import { GameEvent, getEventXP } from './eventRegistry';
 import { processReward, UserGameData } from './reward';
 import { StreakData, getHoursUntilReset, getHoursUntilNewStreak } from './streak';

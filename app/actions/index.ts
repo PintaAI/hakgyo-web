@@ -27,4 +27,4 @@ export type {
 export type {
   KelasType,
   Difficulty,
-} from '@prisma/client';
+} from '@/app/generated/prisma/client';

@@ -2,7 +2,7 @@ import type { StateCreator } from 'zustand';
 import { toast } from 'sonner';
 import type { KelasBuilderState, KelasMetaData } from './types';
 import { updateKelas } from '@/app/actions/kelas';
-import { KelasType, Difficulty } from '@prisma/client';
+import { KelasType, Difficulty } from '@/app/generated/prisma/client';
 
 export const initialMeta: KelasMetaData = {
   title: '',

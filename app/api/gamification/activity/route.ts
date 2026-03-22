@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/db'
-import { ActivityType } from '@prisma/client'
+import { ActivityType } from '@/app/generated/prisma/client'
 import { getHoursUntilReset, getHoursUntilNewStreak } from '@/lib/gamification/streak'
 
 // GET /api/gamification/activity - Get user's activity history

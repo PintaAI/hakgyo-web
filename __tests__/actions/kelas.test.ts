@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { KelasType, Difficulty } from '@prisma/client';
+import { KelasType, Difficulty } from '@/app/generated/prisma/client';
 
 // Mock the external dependencies
 jest.mock('@/lib/db', () => ({

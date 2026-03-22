@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { canModifyKelas } from '@/lib/access-control'
-import { KelasType, Difficulty } from '@prisma/client'
+import { KelasType, Difficulty } from '@/app/generated/prisma/client'
 
 // GET /api/kelas/[id] - Get specific class
 export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {

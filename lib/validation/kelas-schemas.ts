@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { KelasType, Difficulty, VocabularyType, PartOfSpeech } from "@prisma/client";
+import { KelasType, Difficulty, VocabularyType, PartOfSpeech } from "@/app/generated/prisma/client";
 
 // Kelas Meta Schema
 export const KelasMetaSchema = z.object({

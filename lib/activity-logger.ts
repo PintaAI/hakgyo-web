@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { ActivityType } from "@prisma/client";
+import { ActivityType } from "@/app/generated/prisma/client";
 
 export interface ActivityLogData {
   userId: string;

@@ -1,4 +1,4 @@
-import type { KelasType, Difficulty,} from '@prisma/client';
+import type { KelasType, Difficulty,} from '@/app/generated/prisma/client';
 
 // Base data structures from the database, used for form data
 export interface KelasMetaData {

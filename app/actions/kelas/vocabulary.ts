@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { assertAuthenticated } from "@/lib/auth-actions";
-import { VocabularyType, PartOfSpeech } from "@prisma/client";
+import { VocabularyType, PartOfSpeech } from "@/app/generated/prisma/client";
 
 // Helper function to sync vocabulary items
 // Note: caller (saveVocabularySet) is responsible for authentication
