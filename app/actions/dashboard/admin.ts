@@ -856,3 +856,276 @@ export async function formatActivityForDisplay(activity: any) {
     type: mapping.type
   };
 }
+
+// ========== SESSION MANAGEMENT ==========
+
+export interface SessionInfo {
+  id: string;
+  token: string;
+  userId: string;
+  userName: string | null;
+  userEmail: string;
+  userRole: string;
+  expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  ipAddress: string | null;
+  userAgent: string | null;
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+}
+
+export interface SessionStats {
+  totalSessions: number;
+  activeSessions: number;
+  expiredSessions: number;
+  expiringSoonSessions: number;
+  uniqueUsers: number;
+  sessionsByRole: {
+    ADMIN: number;
+    GURU: number;
+    MURID: number;
+  };
+}
+
+// Get all sessions with user info
+export async function getAllSessions(filters: {
+  search?: string;
+  status?: 'ALL' | 'ACTIVE' | 'EXPIRED' | 'EXPIRING_SOON';
+  page?: number;
+  limit?: number;
+} = {}): Promise<{ sessions: SessionInfo[]; total: number }> {
+  try {
+    const { search = "", status = "ALL", page = 1, limit = 20 } = filters;
+    const skip = (page - 1) * limit;
+    const now = new Date();
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
+    // Build where clause
+    const whereClause: any = {};
+
+    if (search) {
+      whereClause.OR = [
+        { user: { name: { contains: search, mode: "insensitive" } } },
+        { user: { email: { contains: search, mode: "insensitive" } } },
+        { token: { contains: search, mode: "insensitive" } }
+      ];
+    }
+
+    // Status filter
+    if (status === "ACTIVE") {
+      whereClause.expiresAt = { gt: now };
+    } else if (status === "EXPIRED") {
+      whereClause.expiresAt = { lte: now };
+    } else if (status === "EXPIRING_SOON") {
+      whereClause.AND = [
+        { expiresAt: { gt: now } },
+        { expiresAt: { lte: oneHourFromNow } }
+      ];
+    }
+
+    const [sessions, total] = await Promise.all([
+      prisma.session.findMany({
+        where: whereClause,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true
+            }
+          }
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit
+      }),
+      prisma.session.count({ where: whereClause })
+    ]);
+
+    return {
+      sessions: sessions.map(s => ({
+        id: s.id,
+        token: s.token,
+        userId: s.userId,
+        userName: s.user.name,
+        userEmail: s.user.email,
+        userRole: s.user.role,
+        expiresAt: s.expiresAt,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+        ipAddress: s.ipAddress,
+        userAgent: s.userAgent,
+        isExpired: s.expiresAt <= now,
+        isExpiringSoon: s.expiresAt > now && s.expiresAt <= oneHourFromNow
+      })),
+      total
+    };
+  } catch (error) {
+    console.error("Error fetching sessions:", error);
+    throw new Error("Failed to fetch sessions");
+  }
+}
+
+// Get session statistics
+export async function getSessionStats(): Promise<SessionStats> {
+  try {
+    const now = new Date();
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
+    const [totalSessions, activeSessions, expiredSessions, expiringSoonSessions, uniqueUsers, sessionsByRole] = await Promise.all([
+      prisma.session.count(),
+      prisma.session.count({ where: { expiresAt: { gt: now } } }),
+      prisma.session.count({ where: { expiresAt: { lte: now } } }),
+      prisma.session.count({
+        where: {
+          AND: [
+            { expiresAt: { gt: now } },
+            { expiresAt: { lte: oneHourFromNow } }
+          ]
+        }
+      }),
+      prisma.session.findMany({
+        select: { userId: true },
+        distinct: ['userId']
+      }),
+      prisma.session.groupBy({
+        by: ['userId'],
+        where: { expiresAt: { gt: now } },
+        _count: true
+      })
+    ]);
+
+    // Get roles for active sessions
+    const activeUserIds = sessionsByRole.map(s => s.userId);
+    const usersWithRoles = await prisma.user.findMany({
+      where: { id: { in: activeUserIds } },
+      select: { id: true, role: true }
+    });
+
+    const roleCount = { ADMIN: 0, GURU: 0, MURID: 0 };
+    usersWithRoles.forEach(user => {
+      if (user.role in roleCount) {
+        roleCount[user.role as keyof typeof roleCount]++;
+      }
+    });
+
+    return {
+      totalSessions,
+      activeSessions,
+      expiredSessions,
+      expiringSoonSessions,
+      uniqueUsers: uniqueUsers.length,
+      sessionsByRole: roleCount
+    };
+  } catch (error) {
+    console.error("Error fetching session stats:", error);
+    throw new Error("Failed to fetch session statistics");
+  }
+}
+
+// Revoke a specific session
+export async function revokeSession(sessionId: string): Promise<{ success: boolean }> {
+  try {
+    await prisma.session.delete({
+      where: { id: sessionId }
+    });
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Error revoking session:", error);
+    throw new Error("Failed to revoke session");
+  }
+}
+
+// Revoke all sessions for a user
+export async function revokeUserSessions(userId: string): Promise<{ success: boolean; count: number }> {
+  try {
+    const result = await prisma.session.deleteMany({
+      where: { userId }
+    });
+    revalidatePath("/dashboard");
+    return { success: true, count: result.count };
+  } catch (error) {
+    console.error("Error revoking user sessions:", error);
+    throw new Error("Failed to revoke user sessions");
+  }
+}
+
+// Revoke all expired sessions (cleanup)
+export async function cleanupExpiredSessions(): Promise<{ success: boolean; count: number }> {
+  try {
+    const result = await prisma.session.deleteMany({
+      where: { expiresAt: { lte: new Date() } }
+    });
+    revalidatePath("/dashboard");
+    return { success: true, count: result.count };
+  } catch (error) {
+    console.error("Error cleaning up expired sessions:", error);
+    throw new Error("Failed to cleanup expired sessions");
+  }
+}
+
+// Find sessions with duplicate tokens (debug)
+export async function findDuplicateTokens(): Promise<{ token: string; count: number; sessions: SessionInfo[] }[]> {
+  try {
+    // Get all sessions and group by token prefix (first 20 chars for comparison)
+    const sessions = await prisma.session.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const now = new Date();
+    const tokenGroups = new Map<string, typeof sessions>();
+
+    sessions.forEach(session => {
+      // Group by token prefix (first 20 characters)
+      const prefix = session.token.substring(0, 20);
+      if (!tokenGroups.has(prefix)) {
+        tokenGroups.set(prefix, []);
+      }
+      tokenGroups.get(prefix)!.push(session);
+    });
+
+    // Find groups with more than one session
+    const duplicates: { token: string; count: number; sessions: SessionInfo[] }[] = [];
+    tokenGroups.forEach((groupSessions, prefix) => {
+      if (groupSessions.length > 1) {
+        duplicates.push({
+          token: prefix + "...",
+          count: groupSessions.length,
+          sessions: groupSessions.map(s => ({
+            id: s.id,
+            token: s.token,
+            userId: s.userId,
+            userName: s.user.name,
+            userEmail: s.user.email,
+            userRole: s.user.role,
+            expiresAt: s.expiresAt,
+            createdAt: s.createdAt,
+            updatedAt: s.updatedAt,
+            ipAddress: s.ipAddress,
+            userAgent: s.userAgent,
+            isExpired: s.expiresAt <= now,
+            isExpiringSoon: false
+          }))
+        });
+      }
+    });
+
+    return duplicates;
+  } catch (error) {
+    console.error("Error finding duplicate tokens:", error);
+    throw new Error("Failed to find duplicate tokens");
+  }
+}

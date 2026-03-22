@@ -10,7 +10,8 @@ import {
   Activity,
   BookOpen,
   TrendingUp,
-  Database
+  Database,
+  KeyRound
 } from "lucide-react";
 import Link from "next/link";
 import { AuthButton } from "../auth/auth-button";
@@ -79,6 +80,16 @@ export function AdminDashboard({ user, dashboardData }: AdminDashboardProps) {
       footerLeft: "Storage",
       footerRight: "Cloudinary",
       gradient: "from-cyan-500 to-cyan-700",
+    },
+    {
+      href: "/dashboard/admin/sessions",
+      icon: <KeyRound className="h-10 w-10 text-white" />,
+      badge: { text: "Debug", variant: "outline", className: "text-white border-white/40" },
+      title: "Session Management",
+      description: "View active sessions, debug token issues, and manage user sessions",
+      footerLeft: "Sessions",
+      footerRight: "Debug",
+      gradient: "from-orange-500 to-orange-700",
     },
   ];
 

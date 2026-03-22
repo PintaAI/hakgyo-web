@@ -1,15 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth';
+import { logActivity } from '@/lib/activity-logger';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const takeParam = searchParams.get('take');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    // Debug: Check for duplicate session tokens in cookie header
+    const cookieHeader = request.headers.get('cookie');
+    if (cookieHeader) {
+      const tokenMatches = cookieHeader.match(/better-auth\.session_token=[^;]*/g);
+      if (tokenMatches && tokenMatches.length > 1) {
+        console.log('[Daily Vocab] ⚠️ DUPLICATE TOKENS DETECTED:', tokenMatches.length, tokenMatches);
+      }
     }
+    
+    const session = await auth.api.getSession({ headers: request.headers });
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+    const { searchParams } = new URL(request.url);
+    const takeParam = searchParams.get('take');
 
     const take = takeParam ? Math.min(parseInt(takeParam), 10) : 5; // Default 5, max 10
 
