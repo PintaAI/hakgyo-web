@@ -1,13 +1,26 @@
 /**
  * GamificationService
  * Centralized service for handling all gamification operations
+ * 
+ * REFACTORED: Now uses calendar-day-based streak logic with:
+ * - Timezone support for accurate day calculation
+ * - Grace period support for users who barely missed a day
+ * - Migration logic for existing users
  */
 
 import { prisma } from '@/lib/db';
 import { ActivityType } from '@/app/generated/prisma/client';
 import { GameEvent, getEventXP } from './eventRegistry';
-import { processReward, UserGameData } from './reward';
-import { StreakData, getHoursUntilReset, getHoursUntilNewStreak } from './streak';
+import { processReward, UserGameData, RewardOptions } from './reward';
+import { 
+  StreakData, 
+  getHoursUntilReset, 
+  getHoursUntilNewStreak,
+  migrateLastActiveDate,
+  formatDateToYMD,
+  getEffectiveTodayYMD,
+  DEFAULT_GRACE_PERIOD_HOURS
+} from './streak';
 
 export interface GamificationResult {
   success: boolean;
@@ -33,10 +46,17 @@ export interface GamificationResult {
       hoursUntilReset: number;
       hoursUntilNewStreak: number;
       lastActive: Date | null;
+      lastActiveDate: string | null;
     };
     activityId?: string;
   };
   error?: string;
+}
+
+export interface TriggerEventOptions {
+  userTimeZone?: string;
+  gracePeriodHours?: number;
+  metadata?: Record<string, any>;
 }
 
 /**
@@ -47,15 +67,19 @@ export class GamificationService {
    * Main entry point for all gamification operations
    * @param userId - The user ID to trigger the event for
    * @param event - The game event to trigger
-   * @param metadata - Optional metadata to store with the activity log
+   * @param options - Optional configuration (timezone, grace period, metadata)
    * @returns GamificationResult with the operation result
    */
   static async triggerEvent(
     userId: string,
     event: GameEvent,
-    metadata?: Record<string, any>
+    options?: TriggerEventOptions
   ): Promise<GamificationResult> {
     try {
+      const userTimeZone = options?.userTimeZone;
+      const gracePeriodHours = options?.gracePeriodHours ?? DEFAULT_GRACE_PERIOD_HOURS;
+      const metadata = options?.metadata;
+
       // Get current user data
       const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -66,6 +90,7 @@ export class GamificationService {
           currentStreak: true,
           longestStreak: true,
           lastActive: true,
+          lastActiveDate: true,
         },
       });
 
@@ -74,6 +99,20 @@ export class GamificationService {
           success: false,
           error: 'User not found',
         };
+      }
+
+      // Migration: Initialize lastActiveDate from lastActive if missing
+      let lastActiveDateString = user.lastActiveDate;
+      if (!lastActiveDateString && user.lastActive) {
+        lastActiveDateString = migrateLastActiveDate(user.lastActive, userTimeZone);
+        
+        // Update the user record with the migrated date (non-blocking)
+        if (lastActiveDateString) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { lastActiveDate: lastActiveDateString },
+          });
+        }
       }
 
       // Get current streak history
@@ -87,6 +126,7 @@ export class GamificationService {
       const streakData: StreakData = {
         currentStreak: user.currentStreak,
         lastActiveDate: user.lastActive,
+        lastActiveDateString: lastActiveDateString,
         longestStreak: user.longestStreak || user.currentStreak,
         streakHistory: currentStreakHistory.map((h) => h.streakDate),
       };
@@ -96,15 +136,32 @@ export class GamificationService {
         streakData,
       };
 
+      // Prepare reward options
+      const rewardOptions: RewardOptions = {
+        userTimeZone,
+        gracePeriodHours,
+      };
+
       // Process the reward
-      const rewardResult = processReward(event, userData, true);
+      const rewardResult = processReward(event, userData, rewardOptions);
 
       // Calculate streak reset information
-      const hoursUntilReset = getHoursUntilReset(user.lastActive);
-      const hoursUntilNewStreak = getHoursUntilNewStreak(user.lastActive);
+      const hoursUntilReset = getHoursUntilReset(
+        lastActiveDateString,
+        userTimeZone,
+        gracePeriodHours
+      );
+      const hoursUntilNewStreak = getHoursUntilNewStreak(
+        lastActiveDateString,
+        userTimeZone,
+        gracePeriodHours
+      );
 
       // Get the base XP for the event
       const baseXP = getEventXP(event);
+
+      // Get the effective today date for the new lastActiveDate
+      const effectiveToday = getEffectiveTodayYMD(userTimeZone, gracePeriodHours);
 
       // Update database in transaction
       const result = await this._updateUserGamification(
@@ -114,6 +171,7 @@ export class GamificationService {
         rewardResult,
         user,
         currentStreakHistory,
+        effectiveToday,
         metadata
       );
 
@@ -132,7 +190,8 @@ export class GamificationService {
           streakInfo: {
             hoursUntilReset,
             hoursUntilNewStreak,
-            lastActive: user.lastActive
+            lastActive: user.lastActive,
+            lastActiveDate: lastActiveDateString,
           },
           levelProgress: {
             currentLevel: rewardResult.levelProgress.currentLevel,
@@ -164,6 +223,7 @@ export class GamificationService {
     rewardResult: any,
     user: any,
     currentStreakHistory: any[],
+    effectiveToday: string,
     metadata?: Record<string, any>
   ): Promise<{ activityLogId: string }> {
     return await prisma.$transaction(async (tx) => {
@@ -194,6 +254,7 @@ export class GamificationService {
           currentStreak: rewardResult.streakData.currentStreak,
           longestStreak: Math.max(user.longestStreak || 0, rewardResult.streakData.currentStreak),
           lastActive: new Date(),
+          lastActiveDate: effectiveToday,
         },
       });
 
@@ -260,5 +321,53 @@ export class GamificationService {
     };
 
     return eventMap[gameEvent] || ActivityType.OTHER;
+  }
+
+  /**
+   * Get user's current streak status
+   * @param userId - The user ID
+   * @param userTimeZone - Optional user timezone
+   * @returns Current streak information
+   */
+  static async getStreakStatus(
+    userId: string,
+    userTimeZone?: string
+  ): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    lastActiveDate: string | null;
+    hoursUntilReset: number;
+    hoursUntilNewStreak: number;
+  } | null> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          currentStreak: true,
+          longestStreak: true,
+          lastActive: true,
+          lastActiveDate: true,
+        },
+      });
+
+      if (!user) return null;
+
+      const lastActiveDateString = user.lastActiveDate || 
+        (user.lastActive ? migrateLastActiveDate(user.lastActive, userTimeZone) : null);
+
+      const hoursUntilReset = getHoursUntilReset(lastActiveDateString, userTimeZone);
+      const hoursUntilNewStreak = getHoursUntilNewStreak(lastActiveDateString, userTimeZone);
+
+      return {
+        currentStreak: user.currentStreak,
+        longestStreak: user.longestStreak || user.currentStreak,
+        lastActiveDate: lastActiveDateString,
+        hoursUntilReset,
+        hoursUntilNewStreak,
+      };
+    } catch (error) {
+      console.error('Error in GamificationService.getStreakStatus:', error);
+      return null;
+    }
   }
 }

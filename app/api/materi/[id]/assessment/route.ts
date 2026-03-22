@@ -277,11 +277,13 @@ export async function POST(
       session.user.id,
       'COMPLETE_ASSESSMENT',
       {
-        materiId: materi.id,
-        materiTitle: materi.title,
-        kelasId: materi.kelasId,
-        score,
-        isPassed
+        metadata: {
+          materiId: materi.id,
+          materiTitle: materi.title,
+          kelasId: materi.kelasId,
+          score,
+          isPassed
+        }
       }
     );
 
@@ -295,11 +297,13 @@ export async function POST(
         session.user.id,
         'PERFECT_SCORE',
         {
-          materiId: materi.id,
-          materiTitle: materi.title,
-          kelasId: materi.kelasId,
-          score: 100,
-          totalQuestions
+          metadata: {
+            materiId: materi.id,
+            materiTitle: materi.title,
+            kelasId: materi.kelasId,
+            score: 100,
+            totalQuestions
+          }
         }
       );
 

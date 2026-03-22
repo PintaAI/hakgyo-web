@@ -117,6 +117,8 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastActive    DateTime? @default(now())
+  // Calendar-day based streak tracking (YYYY-MM-DD format in user's timezone)
+  lastActiveDate String?
   // Core user stats - simplified
   currentStreak Int       @default(0)
   longestStreak Int       @default(0)

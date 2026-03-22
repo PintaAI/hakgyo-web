@@ -171,11 +171,13 @@ export async function POST(
             session.user.id,
             'COMPLETE_SOAL',
             {
-                tryoutId: tryout.id,
-                tryoutTitle: tryout.nama,
-                score,
-                correctCount,
-                totalQuestions
+                metadata: {
+                    tryoutId: tryout.id,
+                    tryoutTitle: tryout.nama,
+                    score,
+                    correctCount,
+                    totalQuestions
+                }
             }
         );
 
@@ -189,10 +191,12 @@ export async function POST(
                 session.user.id,
                 'PERFECT_SCORE',
                 {
-                    tryoutId: tryout.id,
-                    tryoutTitle: tryout.nama,
-                    score: 100,
-                    totalQuestions
+                    metadata: {
+                        tryoutId: tryout.id,
+                        tryoutTitle: tryout.nama,
+                        score: 100,
+                        totalQuestions
+                    }
                 }
             );
 

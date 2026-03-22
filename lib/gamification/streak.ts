@@ -1,11 +1,17 @@
 /**
  * Streak Management for Gamification System
  * Handles daily activity streaks and bonus calculations
+ * 
+ * REFACTORED: Now uses calendar-day-based logic instead of rolling 24-hour window
+ * - Each day is defined by the user's timezone (YYYY-MM-DD format)
+ * - A user can only increment streak once per calendar day
+ * - Grace period support for users who barely missed a day
  */
 
 export interface StreakData {
   currentStreak: number;
   lastActiveDate: Date | null;
+  lastActiveDateString: string | null; // YYYY-MM-DD format in user's timezone
   longestStreak: number;
   streakHistory: Date[];
 }
@@ -26,154 +32,244 @@ export const DEFAULT_STREAK_BONUSES: StreakBonus[] = [
 ];
 
 /**
- * Check if a user has maintained their streak for today
- * @param lastActiveDate The last date the user was active
- * @returns True if the user is still within their streak window
+ * Default grace period in hours after midnight
+ * Users can still maintain their streak within this window
  */
-export function isStreakActive(lastActiveDate: Date | null): boolean {
-  if (!lastActiveDate) return false;
+export const DEFAULT_GRACE_PERIOD_HOURS = 4;
+
+/**
+ * Convert a date to YYYY-MM-DD string in the given timezone
+ * @param date The date to convert
+ * @param timeZone Optional user timezone (e.g., 'Asia/Jakarta')
+ * @returns YYYY-MM-DD string
+ */
+export function formatDateToYMD(date: Date, timeZone?: string): string {
+  const dateInTz = timeZone
+    ? new Date(date.toLocaleString("en-US", { timeZone }))
+    : date;
   
+  const year = dateInTz.getFullYear();
+  const month = String(dateInTz.getMonth() + 1).padStart(2, '0');
+  const day = String(dateInTz.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Parse a YYYY-MM-DD string to a Date object
+ * @param ymdString The YYYY-MM-DD string
+ * @returns Date object at midnight UTC
+ */
+export function parseYMDToDate(ymdString: string): Date {
+  const [year, month, day] = ymdString.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+/**
+ * Get yesterday's date as YYYY-MM-DD string
+ * @param timeZone Optional user timezone
+ * @returns Yesterday's date as YYYY-MM-DD
+ */
+export function getYesterdayYMD(timeZone?: string): string {
   const now = new Date();
-  const lastActive = new Date(lastActiveDate);
-  const hoursSinceLastActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return formatDateToYMD(yesterday, timeZone);
+}
+
+/**
+ * Get today's date as YYYY-MM-DD string
+ * @param timeZone Optional user timezone
+ * @returns Today's date as YYYY-MM-DD
+ */
+export function getTodayYMD(timeZone?: string): string {
+  return formatDateToYMD(new Date(), timeZone);
+}
+
+/**
+ * Calculate the difference in days between two YYYY-MM-DD strings
+ * @param date1 First date (YYYY-MM-DD)
+ * @param date2 Second date (YYYY-MM-DD)
+ * @returns Number of days difference (positive if date2 is after date1)
+ */
+export function daysDifferenceYMD(date1: string, date2: string): number {
+  const d1 = parseYMDToDate(date1);
+  const d2 = parseYMDToDate(date2);
+  const diffTime = d2.getTime() - d1.getTime();
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Check if current time is within the grace period after midnight
+ * Grace period allows users to maintain streak if they missed midnight by a few hours
+ * @param timeZone Optional user timezone
+ * @param gracePeriodHours Grace period in hours (default: 4)
+ * @returns True if within grace period
+ */
+export function isWithinGracePeriod(
+  timeZone?: string,
+  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
+): boolean {
+  const now = new Date();
+  const nowInTz = timeZone
+    ? new Date(now.toLocaleString("en-US", { timeZone }))
+    : now;
   
-  // Streak is active if the user was active in the last 24 hours
-  return hoursSinceLastActive < 24;
+  const currentHour = nowInTz.getHours();
+  return currentHour < gracePeriodHours;
+}
+
+/**
+ * Get the effective "today" date considering grace period
+ * If within grace period, treat it as the previous day for streak purposes
+ * @param timeZone Optional user timezone
+ * @param gracePeriodHours Grace period in hours (default: 4)
+ * @returns Effective today as YYYY-MM-DD
+ */
+export function getEffectiveTodayYMD(
+  timeZone?: string,
+  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
+): string {
+  const now = new Date();
+  const nowInTz = timeZone
+    ? new Date(now.toLocaleString("en-US", { timeZone }))
+    : now;
+  
+  // If within grace period, treat as previous day
+  if (nowInTz.getHours() < gracePeriodHours) {
+    const yesterday = new Date(nowInTz);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return formatDateToYMD(yesterday, timeZone);
+  }
+  
+  return formatDateToYMD(nowInTz, timeZone);
+}
+
+/**
+ * Check if a user has maintained their streak for today
+ * @param lastActiveDateString The last active date (YYYY-MM-DD)
+ * @param timeZone Optional user timezone
+ * @param gracePeriodHours Grace period in hours
+ * @returns True if the user's streak is still active
+ */
+export function isStreakActive(
+  lastActiveDateString: string | null,
+  timeZone?: string,
+  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
+): boolean {
+  if (!lastActiveDateString) return false;
+  
+  const effectiveToday = getEffectiveTodayYMD(timeZone, gracePeriodHours);
+  const yesterday = getYesterdayYMD(timeZone);
+  
+  // Streak is active if last active was today or yesterday (with grace period)
+  return lastActiveDateString === effectiveToday || lastActiveDateString === yesterday;
 }
 
 /**
  * Check if a user has lost their streak
- * @param lastActiveDate The last date the user was active
+ * @param lastActiveDateString The last active date (YYYY-MM-DD)
+ * @param timeZone Optional user timezone
+ * @param gracePeriodHours Grace period in hours
  * @returns True if the user has lost their streak
  */
-export function hasLostStreak(lastActiveDate: Date | null): boolean {
-  if (!lastActiveDate) return false;
+export function hasLostStreak(
+  lastActiveDateString: string | null,
+  timeZone?: string,
+  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
+): boolean {
+  if (!lastActiveDateString) return false;
   
-  const now = new Date();
-  const lastActive = new Date(lastActiveDate);
-  const hoursSinceLastActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
+  const effectiveToday = getEffectiveTodayYMD(timeZone, gracePeriodHours);
+  const yesterday = getYesterdayYMD(timeZone);
   
-  // Streak is lost if the user hasn't been active in 24+ hours
-  return hoursSinceLastActive >= 24;
+  // Streak is lost if last active was before yesterday
+  return lastActiveDateString !== effectiveToday && lastActiveDateString !== yesterday;
 }
 
 /**
- * Update a user's streak based on their activity
+ * Update a user's streak based on their activity using calendar-day logic
  * @param currentStreakData The current streak data
- * @param activeToday Whether the user was active today
  * @param userTimeZone Optional user timezone (e.g., 'Asia/Jakarta')
+ * @param gracePeriodHours Grace period in hours after midnight (default: 4)
  * @returns Updated streak data
  */
 export function updateStreak(
   currentStreakData: StreakData,
-  activeToday: boolean = true,
-  userTimeZone?: string
+  userTimeZone?: string,
+  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
 ): StreakData {
   const now = new Date();
+  const effectiveToday = getEffectiveTodayYMD(userTimeZone, gracePeriodHours);
+  const lastActiveDateString = currentStreakData.lastActiveDateString;
   
-  // Use user timezone if provided, otherwise use server time
-  const userNow = userTimeZone
-    ? new Date(now.toLocaleString("en-US", { timeZone: userTimeZone }))
-    : now;
-  
-  const today = new Date(userNow.getFullYear(), userNow.getMonth(), userNow.getDate());
-  const lastActiveDate = currentStreakData.lastActiveDate
-    ? new Date(currentStreakData.lastActiveDate)
-    : null;
-  
-  // Convert last active date to user timezone if provided
-  const userLastActive = userTimeZone && lastActiveDate
-    ? new Date(lastActiveDate.toLocaleString("en-US", { timeZone: userTimeZone }))
-    : lastActiveDate;
-  
-  if (!activeToday) {
-    // User wasn't active today, check if streak is lost
-    if (hasLostStreak(userLastActive)) {
-      return {
-        currentStreak: 0,
-        lastActiveDate: null,
-        longestStreak: currentStreakData.longestStreak,
-        streakHistory: [...currentStreakData.streakHistory],
-      };
-    }
-    return currentStreakData;
-  }
-
-  // User was active today
-  if (!userLastActive) {
-    // First time activity
+  // If no previous activity, start a new streak
+  if (!lastActiveDateString) {
     return {
       currentStreak: 1,
-      lastActiveDate: today,
-      longestStreak: 1,
-      streakHistory: [today],
+      lastActiveDate: now,
+      lastActiveDateString: effectiveToday,
+      longestStreak: Math.max(1, currentStreakData.longestStreak),
+      streakHistory: [...currentStreakData.streakHistory, now],
     };
   }
-
-  // Check if streak is lost based on 24-hour window
-  if (hasLostStreak(userLastActive)) {
-    // Streak lost, start new streak
-    return {
-      currentStreak: 1,
-      lastActiveDate: today,
-      longestStreak: currentStreakData.longestStreak,
-      streakHistory: [...currentStreakData.streakHistory, today],
-    };
-  }
-
-  const lastActiveDay = userTimeZone && userLastActive
-    ? new Date(
-        userLastActive.getFullYear(),
-        userLastActive.getMonth(),
-        userLastActive.getDate()
-      )
-    : new Date(
-        userLastActive.getFullYear(),
-        userLastActive.getMonth(),
-        userLastActive.getDate()
-      );
-
-  if (lastActiveDay.getTime() === today.getTime()) {
-    // Already active today
+  
+  // Already counted for today - idempotent
+  if (lastActiveDateString === effectiveToday) {
     // Special case: if currentStreak is 0, this is the first activity of the day
-    // and streak should be initialized to 1
     if (currentStreakData.currentStreak === 0) {
       return {
         currentStreak: 1,
-        lastActiveDate: today,
+        lastActiveDate: now,
+        lastActiveDateString: effectiveToday,
         longestStreak: Math.max(1, currentStreakData.longestStreak),
-        streakHistory: [...currentStreakData.streakHistory, today],
+        streakHistory: [...currentStreakData.streakHistory, now],
       };
     }
-    // Otherwise, no change needed - already counted for today
     return currentStreakData;
   }
-
-  const daysDiff = Math.floor(
-    (today.getTime() - lastActiveDay.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  let newStreak = currentStreakData.currentStreak;
-  const newHistory = [...currentStreakData.streakHistory, today];
-
+  
+  // Calculate days difference
+  const daysDiff = daysDifferenceYMD(lastActiveDateString, effectiveToday);
+  
+  let newStreak: number;
+  const newHistory = [...currentStreakData.streakHistory, now];
+  
   if (daysDiff === 1) {
     // Consecutive day, increment streak
-    newStreak += 1;
-  } else if (daysDiff > 1) {
-    // Missed days, reset streak
+    newStreak = currentStreakData.currentStreak + 1;
+  } else if (daysDiff <= 0) {
+    // Same day or invalid (shouldn't happen, but handle gracefully)
+    return currentStreakData;
+  } else {
+    // Missed days, reset streak to 1
     newStreak = 1;
   }
-
+  
   const newLongestStreak = Math.max(newStreak, currentStreakData.longestStreak);
-
-  const result = {
+  
+  return {
     currentStreak: newStreak,
-    lastActiveDate: today,
+    lastActiveDate: now,
+    lastActiveDateString: effectiveToday,
     longestStreak: newLongestStreak,
     streakHistory: newHistory,
   };
-  
-  return result;
+}
+
+/**
+ * Migrate legacy streak data to the new format
+ * Converts lastActiveDate (timestamp) to lastActiveDateString (YYYY-MM-DD)
+ * @param lastActiveDate The legacy lastActiveDate timestamp
+ * @param userTimeZone Optional user timezone
+ * @returns YYYY-MM-DD string or null
+ */
+export function migrateLastActiveDate(
+  lastActiveDate: Date | null,
+  userTimeZone?: string
+): string | null {
+  if (!lastActiveDate) return null;
+  return formatDateToYMD(new Date(lastActiveDate), userTimeZone);
 }
 
 /**
@@ -232,70 +328,106 @@ export function hasReachedMilestone(
 }
 
 /**
- * Calculate hours until streak reset
- * @param lastActiveDate The last date the user was active
- * @returns Hours until streak resets (0 if already lost or no activity)
+ * Calculate hours until streak reset (midnight in user's timezone)
+ * @param lastActiveDateString The last active date (YYYY-MM-DD)
+ * @param timeZone Optional user timezone
+ * @param gracePeriodHours Grace period in hours
+ * @returns Hours until streak resets
  */
-export function getHoursUntilReset(lastActiveDate: Date | null): number {
-  if (!lastActiveDate) return 0;
+export function getHoursUntilReset(
+  lastActiveDateString: string | null,
+  timeZone?: string,
+  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
+): number {
+  if (!lastActiveDateString) return 0;
   
   const now = new Date();
-  const lastActive = new Date(lastActiveDate);
-  const hoursSinceLastActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
+  const nowInTz = timeZone
+    ? new Date(now.toLocaleString("en-US", { timeZone }))
+    : now;
+  
+  const effectiveToday = getEffectiveTodayYMD(timeZone, gracePeriodHours);
   
   // If already lost streak, return 0
-  if (hoursSinceLastActive >= 24) return 0;
+  if (lastActiveDateString !== effectiveToday && 
+      lastActiveDateString !== getYesterdayYMD(timeZone)) {
+    return 0;
+  }
   
-  // Return remaining hours until 24-hour mark
-  return Math.max(0, 24 - hoursSinceLastActive);
+  // Calculate hours until midnight + grace period
+  const tomorrow = new Date(nowInTz);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(gracePeriodHours, 0, 0, 0);
+  
+  const hoursUntilReset = (tomorrow.getTime() - nowInTz.getTime()) / (1000 * 60 * 60);
+  return Math.max(0, hoursUntilReset);
 }
 
 /**
- * Calculate hours until user can add new streak
- * @param lastActiveDate The last date the user was active
- * @param userTimeZone Optional user timezone (e.g., 'Asia/Jakarta')
+ * Calculate hours until user can add new streak (next calendar day)
+ * @param lastActiveDateString The last active date (YYYY-MM-DD)
+ * @param timeZone Optional user timezone
+ * @param gracePeriodHours Grace period in hours
  * @returns Hours until user can add new streak (0 if already available)
  */
 export function getHoursUntilNewStreak(
-  lastActiveDate: Date | null,
-  userTimeZone?: string
+  lastActiveDateString: string | null,
+  timeZone?: string,
+  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
 ): number {
-  if (!lastActiveDate) return 0;
+  if (!lastActiveDateString) return 0;
   
   const now = new Date();
-  
-  // Use user timezone if provided, otherwise use server time
-  const userNow = userTimeZone
-    ? new Date(now.toLocaleString("en-US", { timeZone: userTimeZone }))
+  const nowInTz = timeZone
+    ? new Date(now.toLocaleString("en-US", { timeZone }))
     : now;
   
-  const today = new Date(userNow.getFullYear(), userNow.getMonth(), userNow.getDate());
-  const lastActive = new Date(lastActiveDate);
+  const effectiveToday = getEffectiveTodayYMD(timeZone, gracePeriodHours);
   
-  // Convert last active date to user timezone if provided
-  const userLastActive = userTimeZone
-    ? new Date(lastActive.toLocaleString("en-US", { timeZone: userTimeZone }))
-    : lastActive;
-  
-  const lastActiveDay = new Date(
-    userLastActive.getFullYear(),
-    userLastActive.getMonth(),
-    userLastActive.getDate()
-  );
-  
-  // Check if already lost streak (24+ hours)
-  const hoursSinceLastActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
-  if (hoursSinceLastActive >= 24) return 0;
-  
-  // Check if already active today - user can only add to streak once per day
-  if (lastActiveDay.getTime() === today.getTime()) {
-    // Calculate hours until midnight (next day)
-    const tomorrow = new Date(today);
+  // If already active today, calculate hours until tomorrow
+  if (lastActiveDateString === effectiveToday) {
+    const tomorrow = new Date(nowInTz);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const hoursUntilTomorrow = (tomorrow.getTime() - userNow.getTime()) / (1000 * 60 * 60);
+    tomorrow.setHours(gracePeriodHours, 0, 0, 0);
+    
+    const hoursUntilTomorrow = (tomorrow.getTime() - nowInTz.getTime()) / (1000 * 60 * 60);
     return Math.max(0, hoursUntilTomorrow);
   }
   
-  // User can add to streak now (on a new consecutive day)
+  // User can add to streak now (on a new day)
   return 0;
+}
+
+/**
+ * Legacy compatibility: Check if a user has maintained their streak (Date-based)
+ * @deprecated Use the string-based isStreakActive instead
+ * @param lastActiveDate The last date the user was active
+ * @returns True if the user is still within their streak window
+ */
+export function isStreakActiveLegacy(lastActiveDate: Date | null): boolean {
+  if (!lastActiveDate) return false;
+  
+  const now = new Date();
+  const lastActive = new Date(lastActiveDate);
+  const hoursSinceLastActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
+  
+  // Streak is active if the user was active in the last 24 hours
+  return hoursSinceLastActive < 24;
+}
+
+/**
+ * Legacy compatibility: Check if a user has lost their streak (Date-based)
+ * @deprecated Use the string-based hasLostStreak instead
+ * @param lastActiveDate The last date the user was active
+ * @returns True if the user has lost their streak
+ */
+export function hasLostStreakLegacy(lastActiveDate: Date | null): boolean {
+  if (!lastActiveDate) return false;
+  
+  const now = new Date();
+  const lastActive = new Date(lastActiveDate);
+  const hoursSinceLastActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
+  
+  // Streak is lost if the user hasn't been active in 24+ hours
+  return hoursSinceLastActive >= 24;
 }

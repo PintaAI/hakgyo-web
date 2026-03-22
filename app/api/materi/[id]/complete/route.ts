@@ -93,9 +93,11 @@ export async function POST(
       session.user.id,
       'COMPLETE_MATERI',
       {
-        materiId: materi.id,
-        materiTitle: materi.title,
-        kelasId: materi.kelasId
+        metadata: {
+          materiId: materi.id,
+          materiTitle: materi.title,
+          kelasId: materi.kelasId
+        }
       }
     );
 

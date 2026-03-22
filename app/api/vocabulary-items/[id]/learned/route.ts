@@ -101,7 +101,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
         void GamificationService.triggerEvent(
           session.user.id,
           'COMPLETE_VOCABULARY',
-          { itemId, collectionId: existingItem.collectionId }
+          { metadata: { itemId, collectionId: existingItem.collectionId } }
         );
         
         // console.log(`[GAMIFICATION] ========== COMPLETE_VOCABULARY EVENT RESULT ==========`);

@@ -1,10 +1,20 @@
 /**
  * Reward System for Gamification
  * Main handler for XP calculations and streak bonuses
+ * 
+ * REFACTORED: Now uses calendar-day-based streak logic with timezone support
  */
 
 import { GameEvent, getEventXP } from './eventRegistry';
-import { StreakData, updateStreak, applyStreakBonus, hasReachedMilestone } from './streak';
+import { 
+  StreakData, 
+  updateStreak, 
+  applyStreakBonus, 
+  hasReachedMilestone,
+  getTodayYMD,
+  getEffectiveTodayYMD,
+  DEFAULT_GRACE_PERIOD_HOURS
+} from './streak';
 import { LevelProgress, getLevelProgress, getLevelsGained } from './level';
 
 export interface RewardResult {
@@ -25,24 +35,33 @@ export interface UserGameData {
   streakData: StreakData;
 }
 
+export interface RewardOptions {
+  userTimeZone?: string;
+  gracePeriodHours?: number;
+}
+
 /**
  * Process a game event and calculate rewards
  * @param event The game event that occurred
  * @param userData The current user game data
- * @param activeToday Whether the user was active today (for streak calculation)
+ * @param options Optional configuration (timezone, grace period)
  * @returns Complete reward result
  */
 export function processReward(
   event: GameEvent,
   userData: UserGameData,
-  activeToday: boolean = true
+  options?: RewardOptions
 ): RewardResult {
   // Get base XP for the event
   const baseXP = getEventXP(event);
 
-  // Update streak data
+  // Update streak data using calendar-day logic
   const previousStreak = userData.streakData.currentStreak;
-  const updatedStreakData = updateStreak(userData.streakData, activeToday);
+  const updatedStreakData = updateStreak(
+    userData.streakData,
+    options?.userTimeZone,
+    options?.gracePeriodHours ?? DEFAULT_GRACE_PERIOD_HOURS
+  );
   
   // Check if streak milestone was reached
   const streakMilestoneReached = hasReachedMilestone(
@@ -79,19 +98,19 @@ export function processReward(
  * Process multiple events at once
  * @param events Array of events that occurred
  * @param userData The current user game data
- * @param activeToday Whether the user was active today
+ * @param options Optional configuration (timezone, grace period)
  * @returns Array of reward results
  */
 export function processMultipleRewards(
   events: GameEvent[],
   userData: UserGameData,
-  activeToday: boolean = true
+  options?: RewardOptions
 ): RewardResult[] {
   const results: RewardResult[] = [];
   const currentUserData = { ...userData };
   
   for (const event of events) {
-    const result = processReward(event, currentUserData, activeToday);
+    const result = processReward(event, currentUserData, options);
     results.push(result);
     
     // Update user data for next iteration
@@ -105,21 +124,27 @@ export function processMultipleRewards(
 /**
  * Calculate daily login reward
  * @param userData The current user game data
+ * @param options Optional configuration (timezone, grace period)
  * @returns Reward result for daily login
  */
-export function processDailyLoginReward(userData: UserGameData): RewardResult {
-  return processReward('DAILY_LOGIN', userData, true);
+export function processDailyLoginReward(
+  userData: UserGameData,
+  options?: RewardOptions
+): RewardResult {
+  return processReward('DAILY_LOGIN', userData, options);
 }
 
 /**
  * Calculate streak milestone reward
  * @param userData The current user game data
  * @param milestone The milestone reached
+ * @param options Optional configuration (timezone, grace period)
  * @returns Reward result for streak milestone
  */
 export function processStreakMilestoneReward(
   userData: UserGameData,
-  milestone: number
+  milestone: number,
+  options?: RewardOptions
 ): RewardResult {
   const milestoneXP = milestone * 10; // 10 XP per streak day as milestone bonus
   const enhancedUserData = {
@@ -127,21 +152,23 @@ export function processStreakMilestoneReward(
     totalXP: userData.totalXP + milestoneXP,
   };
   
-  return processReward('STREAK_MILESTONE', enhancedUserData, true);
+  return processReward('STREAK_MILESTONE', enhancedUserData, options);
 }
 
 /**
  * Calculate perfect score bonus
  * @param baseEvent The base event (e.g., COMPLETE_ASSESSMENT)
  * @param userData The current user game data
+ * @param options Optional configuration (timezone, grace period)
  * @returns Reward result with perfect score bonus
  */
 export function processPerfectScoreReward(
   baseEvent: GameEvent,
-  userData: UserGameData
+  userData: UserGameData,
+  options?: RewardOptions
 ): RewardResult {
   // First process the base event
-  const baseResult = processReward(baseEvent, userData, true);
+  const baseResult = processReward(baseEvent, userData, options);
   
   // Then add the perfect score bonus
   const enhancedUserData = {
@@ -149,7 +176,7 @@ export function processPerfectScoreReward(
     totalXP: userData.totalXP + baseResult.totalXP,
   };
   
-  const perfectScoreResult = processReward('PERFECT_SCORE', enhancedUserData, true);
+  const perfectScoreResult = processReward('PERFECT_SCORE', enhancedUserData, options);
   
   // Combine the results
   return {
@@ -185,25 +212,44 @@ export function formatRewardSummary(result: RewardResult): string {
 
 /**
  * Check if user is eligible for any special rewards
+ * Uses calendar-day-based comparison
  * @param userData The current user game data
+ * @param options Optional configuration (timezone, grace period)
  * @returns Array of eligible special rewards
  */
-export function getEligibleSpecialRewards(userData: UserGameData): GameEvent[] {
+export function getEligibleSpecialRewards(
+  userData: UserGameData,
+  options?: RewardOptions
+): GameEvent[] {
   const eligibleRewards: GameEvent[] = [];
   
-  // Check if user hasn't logged in today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const effectiveToday = getEffectiveTodayYMD(
+    options?.userTimeZone,
+    options?.gracePeriodHours ?? DEFAULT_GRACE_PERIOD_HOURS
+  );
   
-  const lastActive = userData.streakData.lastActiveDate;
-  if (lastActive) {
-    const lastActiveDay = new Date(lastActive);
-    lastActiveDay.setHours(0, 0, 0, 0);
-    
-    if (lastActiveDay.getTime() < today.getTime()) {
-      eligibleRewards.push('DAILY_LOGIN');
-    }
+  const lastActiveDateString = userData.streakData.lastActiveDateString;
+  
+  // Check if user hasn't logged in today (based on calendar day)
+  if (!lastActiveDateString || lastActiveDateString !== effectiveToday) {
+    eligibleRewards.push('DAILY_LOGIN');
   }
   
   return eligibleRewards;
+}
+
+/**
+ * Legacy compatibility: Process a game event with boolean activeToday parameter
+ * @deprecated Use processReward with options instead
+ * @param event The game event that occurred
+ * @param userData The current user game data
+ * @param activeToday Whether the user was active today (ignored in new implementation)
+ * @returns Complete reward result
+ */
+export function processRewardLegacy(
+  event: GameEvent,
+  userData: UserGameData,
+  activeToday: boolean = true
+): RewardResult {
+  return processReward(event, userData);
 }

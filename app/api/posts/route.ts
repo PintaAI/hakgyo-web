@@ -175,10 +175,12 @@ export async function POST(request: NextRequest) {
       session.user.id,
       'CREATE_POST',
       {
-        postId: post.id,
-        postTitle: post.title,
-        kelasId: post.kelasId,
-        postType: post.type
+        metadata: {
+          postId: post.id,
+          postTitle: post.title,
+          kelasId: post.kelasId,
+          postType: post.type
+        }
       }
     );
 
