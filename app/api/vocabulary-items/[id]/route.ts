@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { VocabularyType, PartOfSpeech } from '@/app/generated/prisma/client'
+import { VocabularyType, PartOfSpeech } from '@/lib/enums'
 
 // GET /api/vocabulary-items/[id] - Get specific vocabulary item
 export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {

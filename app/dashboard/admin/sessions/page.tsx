@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSessionCached } from "@/lib/auth-actions";
-import { getAllSessions, getSessionStats, findDuplicateTokens, cleanupExpiredSessions } from "@/app/actions/dashboard/admin";
+import { getAllSessions, getSessionStats, findDuplicateTokens } from "@/app/actions/dashboard/admin";
 import { SessionManagementContent } from "./session-content";
 
 type UserRoles = "GURU" | "MURID" | "ADMIN";
@@ -36,12 +36,11 @@ export default async function SessionManagementPage() {
 
   return (
     <Suspense fallback={<div className="p-8">Loading...</div>}>
-      <SessionManagementContent 
+      <SessionManagementContent
         initialSessions={sessionsData.sessions}
         totalSessions={sessionsData.total}
         stats={stats}
         duplicates={duplicates}
-        user={user}
       />
     </Suspense>
   );

@@ -276,6 +276,7 @@ export function createDefaultStreakData(): StreakData {
   return {
     currentStreak: 0,
     lastActiveDate: null,
+    lastActiveDateString: null,
     longestStreak: 0,
     streakHistory: [],
   };

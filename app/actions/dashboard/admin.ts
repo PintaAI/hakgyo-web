@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { UserRoles } from "@/app/generated/prisma/client";
+import { UserRoles } from "@/lib/enums";
 import { revalidatePath } from "next/cache";
 import { daysAgo, weeksAgo, isWithinDays, formatRelativeTime } from "@/lib/utils";
 

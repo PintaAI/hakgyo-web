@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { Difficulty } from "@/app/generated/prisma/client";
+import { Difficulty } from "@/lib/enums";
 
 interface OpsiItem {
   id?: number | string;

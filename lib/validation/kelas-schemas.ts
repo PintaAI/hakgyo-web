@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { KelasType, Difficulty, VocabularyType, PartOfSpeech } from "@/app/generated/prisma/client";
+import { KelasType, Difficulty, VocabularyType, PartOfSpeech } from "@/lib/enums";
+
+// Re-export enums for convenience
+export { KelasType, Difficulty, VocabularyType, PartOfSpeech };
 
 // Kelas Meta Schema
 export const KelasMetaSchema = z.object({

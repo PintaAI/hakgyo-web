@@ -135,14 +135,25 @@ export function getEffectiveTodayYMD(
     ? new Date(now.toLocaleString("en-US", { timeZone }))
     : now;
   
+  console.log('📅 [STREAK] getEffectiveTodayYMD called');
+  console.log('📅 [STREAK] Timezone:', timeZone || 'server time');
+  console.log('📅 [STREAK] Current time in TZ:', nowInTz.toISOString());
+  console.log('📅 [STREAK] Hour in TZ:', nowInTz.getHours());
+  console.log('📅 [STREAK] Grace period hours:', gracePeriodHours);
+  
   // If within grace period, treat as previous day
   if (nowInTz.getHours() < gracePeriodHours) {
+    console.log('🌅 [STREAK] Within grace period! Treating as previous day');
     const yesterday = new Date(nowInTz);
     yesterday.setDate(yesterday.getDate() - 1);
-    return formatDateToYMD(yesterday, timeZone);
+    const result = formatDateToYMD(yesterday, timeZone);
+    console.log('📅 [STREAK] Effective today (grace period):', result);
+    return result;
   }
   
-  return formatDateToYMD(nowInTz, timeZone);
+  const result = formatDateToYMD(nowInTz, timeZone);
+  console.log('📅 [STREAK] Effective today (normal):', result);
+  return result;
 }
 
 /**
@@ -203,8 +214,20 @@ export function updateStreak(
   const effectiveToday = getEffectiveTodayYMD(userTimeZone, gracePeriodHours);
   const lastActiveDateString = currentStreakData.lastActiveDateString;
   
+  console.log('🔄 [STREAK] ========== updateStreak called ==========');
+  console.log('🔄 [STREAK] Input:', {
+    currentStreak: currentStreakData.currentStreak,
+    longestStreak: currentStreakData.longestStreak,
+    lastActiveDateString,
+    userTimeZone,
+    gracePeriodHours
+  });
+  console.log('🔄 [STREAK] Current time (UTC):', now.toISOString());
+  console.log('🔄 [STREAK] Effective today (YYYY-MM-DD):', effectiveToday);
+  
   // If no previous activity, start a new streak
   if (!lastActiveDateString) {
+    console.log('🆕 [STREAK] No previous activity - starting new streak at 1');
     return {
       currentStreak: 1,
       lastActiveDate: now,
@@ -214,10 +237,14 @@ export function updateStreak(
     };
   }
   
+  console.log('📅 [STREAK] Last active date:', lastActiveDateString);
+  
   // Already counted for today - idempotent
   if (lastActiveDateString === effectiveToday) {
+    console.log('✅ [STREAK] Already counted for today - no change (idempotent)');
     // Special case: if currentStreak is 0, this is the first activity of the day
     if (currentStreakData.currentStreak === 0) {
+      console.log('⚠️ [STREAK] Special case: currentStreak is 0, initializing to 1');
       return {
         currentStreak: 1,
         lastActiveDate: now,
@@ -226,11 +253,13 @@ export function updateStreak(
         streakHistory: [...currentStreakData.streakHistory, now],
       };
     }
+    console.log('🔄 [STREAK] Returning unchanged streak data');
     return currentStreakData;
   }
   
   // Calculate days difference
   const daysDiff = daysDifferenceYMD(lastActiveDateString, effectiveToday);
+  console.log('📊 [STREAK] Days difference:', daysDiff, '(lastActiveDateString -> effectiveToday)');
   
   let newStreak: number;
   const newHistory = [...currentStreakData.streakHistory, now];
@@ -238,15 +267,25 @@ export function updateStreak(
   if (daysDiff === 1) {
     // Consecutive day, increment streak
     newStreak = currentStreakData.currentStreak + 1;
+    console.log('🔥 [STREAK] Consecutive day! Incrementing streak:', currentStreakData.currentStreak, '->', newStreak);
   } else if (daysDiff <= 0) {
     // Same day or invalid (shouldn't happen, but handle gracefully)
+    console.log('⚠️ [STREAK] Same day or invalid daysDiff:', daysDiff, '- returning unchanged');
     return currentStreakData;
   } else {
     // Missed days, reset streak to 1
     newStreak = 1;
+    console.log('💔 [STREAK] Missed', daysDiff, 'days - resetting streak to 1');
   }
   
   const newLongestStreak = Math.max(newStreak, currentStreakData.longestStreak);
+  console.log('🏆 [STREAK] New longest streak:', newLongestStreak);
+  console.log('🔄 [STREAK] ========== updateStreak result ==========');
+  console.log('🔄 [STREAK] Output:', {
+    currentStreak: newStreak,
+    lastActiveDateString: effectiveToday,
+    longestStreak: newLongestStreak
+  });
   
   return {
     currentStreak: newStreak,

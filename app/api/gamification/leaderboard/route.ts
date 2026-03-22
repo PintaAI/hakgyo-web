@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/db'
-import { UserRoles } from '@/app/generated/prisma/client'
+import { UserRoles } from '@/lib/enums'
 
 // GET /api/gamification/leaderboard - Get leaderboard rankings
 export async function GET(request: NextRequest) {

@@ -9,15 +9,14 @@
  */
 
 import { prisma } from '@/lib/db';
-import { ActivityType } from '@/app/generated/prisma/client';
+import { ActivityType } from '@/lib/enums';
 import { GameEvent, getEventXP } from './eventRegistry';
 import { processReward, UserGameData, RewardOptions } from './reward';
-import { 
-  StreakData, 
-  getHoursUntilReset, 
+import {
+  StreakData,
+  getHoursUntilReset,
   getHoursUntilNewStreak,
   migrateLastActiveDate,
-  formatDateToYMD,
   getEffectiveTodayYMD,
   DEFAULT_GRACE_PERIOD_HOURS
 } from './streak';
@@ -80,6 +79,11 @@ export class GamificationService {
       const gracePeriodHours = options?.gracePeriodHours ?? DEFAULT_GRACE_PERIOD_HOURS;
       const metadata = options?.metadata;
 
+      console.log('🎮 [GAMIFICATION] ========== triggerEvent called ==========');
+      console.log('🎮 [GAMIFICATION] Event:', event);
+      console.log('🎮 [GAMIFICATION] User ID:', userId);
+      console.log('🎮 [GAMIFICATION] Options:', { userTimeZone, gracePeriodHours, metadata });
+
       // Get current user data
       const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -95,16 +99,28 @@ export class GamificationService {
       });
 
       if (!user) {
+        console.log('❌ [GAMIFICATION] User not found');
         return {
           success: false,
           error: 'User not found',
         };
       }
 
+      console.log('👤 [GAMIFICATION] User data from DB:', {
+        xp: user.xp,
+        level: user.level,
+        currentStreak: user.currentStreak,
+        longestStreak: user.longestStreak,
+        lastActive: user.lastActive,
+        lastActiveDate: user.lastActiveDate
+      });
+
       // Migration: Initialize lastActiveDate from lastActive if missing
       let lastActiveDateString = user.lastActiveDate;
       if (!lastActiveDateString && user.lastActive) {
+        console.log('🔄 [GAMIFICATION] Migrating lastActive to lastActiveDate...');
         lastActiveDateString = migrateLastActiveDate(user.lastActive, userTimeZone);
+        console.log('🔄 [GAMIFICATION] Migrated lastActiveDate:', lastActiveDateString);
         
         // Update the user record with the migrated date (non-blocking)
         if (lastActiveDateString) {
@@ -131,6 +147,12 @@ export class GamificationService {
         streakHistory: currentStreakHistory.map((h) => h.streakDate),
       };
 
+      console.log('📊 [GAMIFICATION] Prepared streakData:', {
+        currentStreak: streakData.currentStreak,
+        lastActiveDateString: streakData.lastActiveDateString,
+        longestStreak: streakData.longestStreak
+      });
+
       const userData: UserGameData = {
         totalXP: user.xp,
         streakData,
@@ -142,8 +164,17 @@ export class GamificationService {
         gracePeriodHours,
       };
 
+      console.log('🎁 [GAMIFICATION] Calling processReward...');
       // Process the reward
       const rewardResult = processReward(event, userData, rewardOptions);
+      console.log('🎁 [GAMIFICATION] Reward result:', {
+        event: rewardResult.event,
+        baseXP: rewardResult.baseXP,
+        streakBonus: rewardResult.streakBonus,
+        totalXP: rewardResult.totalXP,
+        currentStreak: rewardResult.streakData.currentStreak,
+        streakMilestoneReached: rewardResult.streakMilestoneReached
+      });
 
       // Calculate streak reset information
       const hoursUntilReset = getHoursUntilReset(

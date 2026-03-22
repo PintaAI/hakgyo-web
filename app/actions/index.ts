@@ -24,7 +24,4 @@ export type {
 } from './explore';
 
 // Type exports for better developer experience
-export type {
-  KelasType,
-  Difficulty,
-} from '@/app/generated/prisma/client';
+export type { KelasType, Difficulty } from '@/lib/enums';

@@ -63,16 +63,28 @@ Daily streaks track consecutive days of user activity. Maintaining a streak prov
 - 60 days: Two-month streak
 - 100 days: Century streak
 
-**Streak Rules:**
-- Streak increments on first activity each day
-- Streak resets if user is inactive for 24+ hours
-- Streak is maintained within 24-hour window from last activity
+**Streak Rules (Calendar-Day Based):**
+- Streak increments on first activity each **calendar day** (based on user's timezone)
+- A user can only increment their streak **once per calendar day**
+- Streak resets if user misses a day (no activity for the entire calendar day)
+- **Grace Period**: Users have a grace period (default: 4 hours after midnight) where activity still counts for the previous day
+- The server is the single source of truth for streak validation
+
+**Example Streak Behavior:**
+```
+Day 1 (2024-01-01): User active at 3 PM → streak = 1
+Day 2 (2024-01-02): User active at 10 AM → streak = 2 (consecutive day)
+Day 3 (2024-01-03): User active at 2 AM (within grace period) → streak = 3 (counts as Day 2)
+Day 4 (2024-01-04): User inactive → streak still = 3
+Day 5 (2024-01-05): User active → streak = 1 (reset due to missed day)
+```
 
 ## API Endpoints
 
 | Endpoint | Method | Description |
 |----------|---------|-------------|
 | `/api/gamification/events` | POST | Process gamification events and award XP |
+| `/api/gamification/events` | GET | Get user's current streak status |
 | `/api/gamification/activity` | GET | Get user's activity history |
 | `/api/gamification/leaderboard` | GET | Get leaderboard rankings |
 
@@ -85,10 +97,18 @@ Track user activities and award XP.
 ```typescript
 import { gamificationApi } from '@hakgyo-expo-sdk';
 
-// Process a gamification event
+// Basic event processing
 const result = await gamificationApi.processEvent({
   event: 'COMPLETE_VOCABULARY',
   metadata: { itemId: 123, collectionId: 45 }
+});
+
+// With timezone support for accurate streak calculation
+const result = await gamificationApi.processEvent({
+  event: 'DAILY_LOGIN',
+  metadata: { source: 'mobile_app' },
+  userTimeZone: 'Asia/Jakarta', // User's timezone for calendar-day calculation
+  gracePeriodHours: 4 // Grace period after midnight (default: 4)
 });
 
 if (result.success) {
@@ -106,8 +126,32 @@ if (result.success) {
   if (data.streakMilestoneReached) {
     console.log(`Streak milestone reached! ${data.currentStreak} day streak`);
   }
+  
+  // Access streak info
+  console.log(`Last active date: ${data.streakInfo.lastActiveDate}`);
+  console.log(`Hours until streak can increase: ${data.streakInfo.hoursUntilNewStreak}`);
 } else {
   console.error('Error:', result.error);
+}
+```
+
+### Get Streak Status
+
+Retrieve the user's current streak information.
+
+```typescript
+import { gamificationApi } from '@hakgyo-expo-sdk';
+
+// Get streak status with timezone support
+const streakStatus = await gamificationApi.getStreakStatus('Asia/Jakarta');
+
+if (streakStatus.success) {
+  const { data } = streakStatus;
+  console.log(`Current streak: ${data.currentStreak} days`);
+  console.log(`Longest streak: ${data.longestStreak} days`);
+  console.log(`Last active: ${data.lastActiveDate}`);
+  console.log(`Hours until reset: ${data.hoursUntilReset}`);
+  console.log(`Hours until new streak: ${data.hoursUntilNewStreak}`);
 }
 ```
 
@@ -248,7 +292,40 @@ interface GamificationResult {
     currentStreak: number;        // Current daily streak count
     streakMilestoneReached: boolean; // Whether a streak milestone was reached
     levelProgress: LevelProgress;  // Detailed progress information
+    streakInfo: {
+      hoursUntilReset: number;     // Hours until streak resets
+      hoursUntilNewStreak: number; // Hours until user can add to streak
+      lastActive: string | null;   // ISO timestamp of last activity
+      lastActiveDate: string | null; // YYYY-MM-DD in user's timezone
+    };
     activityId?: string;          // ID of the created activity log entry
+  };
+  error?: string;
+}
+```
+
+### ProcessEventRequest
+
+```typescript
+interface ProcessEventRequest {
+  event: GameEvent;
+  metadata?: Record<string, any>;
+  userTimeZone?: string;      // User's timezone (e.g., 'Asia/Jakarta')
+  gracePeriodHours?: number;  // Grace period after midnight (default: 4)
+}
+```
+
+### StreakStatusResponse
+
+```typescript
+interface StreakStatusResponse {
+  success: boolean;
+  data?: {
+    currentStreak: number;
+    longestStreak: number;
+    lastActiveDate: string | null; // YYYY-MM-DD format
+    hoursUntilReset: number;
+    hoursUntilNewStreak: number;
   };
   error?: string;
 }
@@ -445,6 +522,41 @@ async function handleActivityComplete(eventType: string, metadata: any) {
 }
 ```
 
+### 5. Displaying Streak Information
+
+```typescript
+import React, { useEffect, useState } from 'react';
+import { gamificationApi } from '@hakgyo-expo-sdk';
+
+export function StreakDisplay() {
+  const [streakStatus, setStreakStatus] = useState(null);
+
+  useEffect(() => {
+    loadStreakStatus();
+  }, []);
+
+  async function loadStreakStatus() {
+    // Pass user's timezone for accurate display
+    const response = await gamificationApi.getStreakStatus('Asia/Jakarta');
+    if (response.success) {
+      setStreakStatus(response.data);
+    }
+  }
+
+  if (!streakStatus) return null;
+
+  return (
+    <View>
+      <Text>🔥 {streakStatus.currentStreak} day streak</Text>
+      <Text>Longest: {streakStatus.longestStreak} days</Text>
+      {streakStatus.hoursUntilReset > 0 && (
+        <Text>Resets in {Math.ceil(streakStatus.hoursUntilReset)} hours</Text>
+      )}
+    </View>
+  );
+}
+```
+
 ## Error Handling
 
 All SDK methods return an `ApiResponse` object:
@@ -501,8 +613,26 @@ if (session) {
 }
 ```
 
+## Timezone Best Practices
+
+For accurate streak calculation, always pass the user's timezone when processing events:
+
+```typescript
+import { gamificationApi } from '@hakgyo-expo-sdk';
+
+// Get user's timezone (e.g., from device settings or user profile)
+const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// Process event with timezone
+const result = await gamificationApi.processEvent({
+  event: 'DAILY_LOGIN',
+  userTimeZone,
+  gracePeriodHours: 4 // Optional: customize grace period
+});
+```
+
 ## Related Documentation
 
-- [SDK Overview](./sdk-overview.md) - General SDK information
+- [SDK Overview](./README.md) - General SDK information
 - [API Routes](./api-routes.md) - Backend API documentation
-- [Vocabulary SDK Usage](./vocab-sdk-usage.md) - Vocabulary-specific operations
+- [Vocabulary SDK Usage](./api-vocabulary.md) - Vocabulary-specific operations

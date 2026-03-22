@@ -6,12 +6,11 @@
  */
 
 import { GameEvent, getEventXP } from './eventRegistry';
-import { 
-  StreakData, 
-  updateStreak, 
-  applyStreakBonus, 
+import {
+  StreakData,
+  updateStreak,
+  applyStreakBonus,
   hasReachedMilestone,
-  getTodayYMD,
   getEffectiveTodayYMD,
   DEFAULT_GRACE_PERIOD_HOURS
 } from './streak';
@@ -52,31 +51,52 @@ export function processReward(
   userData: UserGameData,
   options?: RewardOptions
 ): RewardResult {
+  console.log('💰 [REWARD] ========== processReward called ==========');
+  console.log('💰 [REWARD] Event:', event);
+  console.log('💰 [REWARD] User data:', {
+    totalXP: userData.totalXP,
+    currentStreak: userData.streakData.currentStreak,
+    lastActiveDateString: userData.streakData.lastActiveDateString
+  });
+  console.log('💰 [REWARD] Options:', options);
+  
   // Get base XP for the event
   const baseXP = getEventXP(event);
+  console.log('💰 [REWARD] Base XP for event:', baseXP);
 
   // Update streak data using calendar-day logic
   const previousStreak = userData.streakData.currentStreak;
+  console.log('💰 [REWARD] Previous streak:', previousStreak);
+  console.log('💰 [REWARD] Calling updateStreak...');
+  
   const updatedStreakData = updateStreak(
     userData.streakData,
     options?.userTimeZone,
     options?.gracePeriodHours ?? DEFAULT_GRACE_PERIOD_HOURS
   );
   
+  console.log('💰 [REWARD] Updated streak:', updatedStreakData.currentStreak);
+  
   // Check if streak milestone was reached
   const streakMilestoneReached = hasReachedMilestone(
     updatedStreakData.currentStreak,
     previousStreak
   );
+  console.log('💰 [REWARD] Streak milestone reached:', streakMilestoneReached);
   
   // Apply streak bonus to XP
   const streakBonusXP = applyStreakBonus(baseXP, updatedStreakData.currentStreak);
+  console.log('💰 [REWARD] XP with streak bonus:', streakBonusXP, '(streak multiplier applied)');
+  
   const totalXP = userData.totalXP + streakBonusXP;
+  console.log('💰 [REWARD] New total XP:', totalXP);
   
   // Calculate level progress
   const previousLevel = getLevelProgress(userData.totalXP).currentLevel;
   const newLevelProgress = getLevelProgress(totalXP);
   const levelsGained = getLevelsGained(userData.totalXP, totalXP);
+  
+  console.log('💰 [REWARD] Level:', previousLevel, '->', newLevelProgress.currentLevel, '(gained:', levelsGained, ')');
   
   const result = {
     event,
@@ -90,6 +110,15 @@ export function processReward(
     streakData: updatedStreakData,
     streakMilestoneReached,
   };
+  
+  console.log('💰 [REWARD] ========== processReward result ==========');
+  console.log('💰 [REWARD] Final result:', {
+    event: result.event,
+    baseXP: result.baseXP,
+    streakBonus: result.streakBonus,
+    totalXP: result.totalXP,
+    currentStreak: result.streakData.currentStreak
+  });
   
   return result;
 }
@@ -249,7 +278,8 @@ export function getEligibleSpecialRewards(
 export function processRewardLegacy(
   event: GameEvent,
   userData: UserGameData,
-  activeToday: boolean = true
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _activeToday: boolean = true
 ): RewardResult {
   return processReward(event, userData);
 }

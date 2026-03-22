@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/db'
-import { ActivityType } from '@/app/generated/prisma/client'
+import { ActivityType } from '@/lib/enums'
 import { getHoursUntilReset, getHoursUntilNewStreak } from '@/lib/gamification/streak'
 
 // GET /api/gamification/activity - Get user's activity history
@@ -137,8 +137,9 @@ export async function GET(request: NextRequest) {
     })
 
     // Calculate hours until reset and new streak
-    const hoursUntilReset = getHoursUntilReset(user?.lastActive || null)
-    const hoursUntilNewStreak = getHoursUntilNewStreak(user?.lastActive || null)
+    const lastActiveStr = user?.lastActive ? user.lastActive.toISOString() : null
+    const hoursUntilReset = getHoursUntilReset(lastActiveStr)
+    const hoursUntilNewStreak = getHoursUntilNewStreak(lastActiveStr)
 
     // Calculate pagination meta
     const totalPages = Math.ceil(total / limit)

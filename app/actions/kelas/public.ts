@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { KelasType, Difficulty } from "@/app/generated/prisma/client";
+import { KelasType, Difficulty } from "@/lib/enums";
 
 export interface GetKelasListParams {
   type?: KelasType;

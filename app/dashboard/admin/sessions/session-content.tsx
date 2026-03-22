@@ -58,7 +58,7 @@ interface SessionManagementContentProps {
   totalSessions: number;
   stats: SessionStats;
   duplicates: { token: string; count: number; sessions: SessionInfo[] }[];
-  user: DashboardUser;
+  user?: DashboardUser;
 }
 
 export function SessionManagementContent({
@@ -66,8 +66,7 @@ export function SessionManagementContent({
   totalSessions,
   stats,
   duplicates,
-  user
-}: SessionManagementContentProps) {
+}: Omit<SessionManagementContentProps, 'user'>) {
   const [sessions, setSessions] = useState<SessionInfo[]>(initialSessions);
   const [sessionStats, setSessionStats] = useState<SessionStats>(stats);
   const [sessionDuplicates, setSessionDuplicates] = useState(duplicates);

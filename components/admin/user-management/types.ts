@@ -1,4 +1,4 @@
-import { UserRoles } from "@/app/generated/prisma/client";
+import { UserRoles } from "@/lib/enums";
 
 export interface UserWithStats {
   id: string;
