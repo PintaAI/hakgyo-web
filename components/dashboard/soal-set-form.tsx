@@ -10,7 +10,7 @@ import { saveKoleksiSoal, getSoalsByKoleksi, saveSoal, saveOpsi, deleteSoal,  } 
 import { SoalItemList } from "./soal-item-list";
 import { SoalItemForm } from "./soal-item-form";
 import { SoalSetFormSkeleton } from "./soal-set-form-skeleton";
-import { Difficulty } from "@prisma/client";
+import { Difficulty } from "@/lib/prisma-types";
 import { z } from "zod";
 import { useSoalStore } from "@/lib/dashboard/manage-soal-state";
 import { generateItems, soalItemsSchema } from "@/lib/dashboard/ai-generation";

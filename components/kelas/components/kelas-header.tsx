@@ -6,7 +6,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { motion} from "framer-motion";
 import Image from "next/image";
 import React from "react";
-import { KelasType, Difficulty } from "@prisma/client";
+import { KelasType, Difficulty } from "@/lib/prisma-types";
 
 interface KelasHeaderProps {
   kelas: {

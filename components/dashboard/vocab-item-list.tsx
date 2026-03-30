@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { BsStars } from "react-icons/bs";
-import { VocabularyType } from "@prisma/client";
+import { VocabularyType } from "@/lib/prisma-types";
 import {
   ColumnDef,
   flexRender,

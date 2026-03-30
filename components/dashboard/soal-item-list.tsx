@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, HelpCircle, Sparkles } from "lucide-react";
-import { Difficulty } from "@prisma/client";
+import { Difficulty } from "@/lib/prisma-types";
 
 interface SoalItem {
   id?: number | string;

@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { UserRoles } from "@prisma/client";
+import { UserRoles } from "@/lib/prisma-types";
 
 interface UserFiltersProps {
   searchTerm: string;

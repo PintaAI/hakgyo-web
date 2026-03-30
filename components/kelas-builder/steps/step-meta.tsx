@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useKelasBuilderStore } from "@/lib/stores/kelas-builder";
 import { KelasMetaSchema } from "@/lib/validation/kelas-schemas";
-import { KelasType, Difficulty } from "@prisma/client";
+import { KelasType, Difficulty } from "@/lib/prisma-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

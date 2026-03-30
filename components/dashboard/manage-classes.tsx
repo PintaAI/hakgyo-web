@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { KelasType, Difficulty } from "@prisma/client";
+import { KelasType, Difficulty } from "@/lib/prisma-types";
 import { deleteDraftKelas, publishKelas, unpublishKelas } from "@/app/actions/kelas";
 import { KelasCard, GuruKelas } from "@/components/kelas/kelas-card";
 import { toast } from "sonner";

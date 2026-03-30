@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BookOpen, Users,  MoreVertical, Eye, Edit3, FileText, Trash2,  EyeOff } from "lucide-react";
-import { Difficulty, KelasType } from "@prisma/client";
+import { Difficulty, KelasType } from "@/lib/prisma-types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

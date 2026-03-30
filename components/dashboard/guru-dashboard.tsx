@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
-import { Difficulty } from "@prisma/client";
+import { Difficulty } from "@/lib/prisma-types";
 import { SearchComponent } from "@/components/ui/search";
 import { ManageClasses } from "@/components/dashboard/manage-classes";
 import { ManageVocab } from "@/components/dashboard/manage-vocab";

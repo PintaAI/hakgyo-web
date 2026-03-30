@@ -38,6 +38,13 @@ export const DEFAULT_STREAK_BONUSES: StreakBonus[] = [
 export const DEFAULT_GRACE_PERIOD_HOURS = 4;
 
 /**
+ * Streak protection end hour (24-hour format)
+ * Streak is protected until this hour on the day AFTER the last activity
+ * Default: 23 (11 PM) - users have until 11 PM the next day to maintain their streak
+ */
+export const STREAK_PROTECTION_END_HOUR = 23;
+
+/**
  * Convert a date to YYYY-MM-DD string in the given timezone
  * @param date The date to convert
  * @param timeZone Optional user timezone (e.g., 'Asia/Jakarta')
@@ -157,10 +164,55 @@ export function getEffectiveTodayYMD(
 }
 
 /**
- * Check if a user has maintained their streak for today
+ * Check if the streak is still within the protection window
+ * The streak is protected until STREAK_PROTECTION_END_HOUR (default 11 PM)
+ * on the day AFTER the last activity
+ *
  * @param lastActiveDateString The last active date (YYYY-MM-DD)
  * @param timeZone Optional user timezone
- * @param gracePeriodHours Grace period in hours
+ * @param protectionEndHour Hour until which streak is protected (default: 23 = 11 PM)
+ * @returns True if the streak is still protected
+ */
+export function isStreakProtected(
+  lastActiveDateString: string | null,
+  timeZone?: string,
+  protectionEndHour: number = STREAK_PROTECTION_END_HOUR
+): boolean {
+  if (!lastActiveDateString) return false;
+  
+  const now = new Date();
+  const nowInTz = timeZone
+    ? new Date(now.toLocaleString("en-US", { timeZone }))
+    : now;
+  
+  const todayYMD = formatDateToYMD(nowInTz, timeZone);
+  const currentHour = nowInTz.getHours();
+  const yesterdayYMD = getYesterdayYMD(timeZone);
+  
+  // Case 1: User was active today - streak is always protected
+  if (lastActiveDateString === todayYMD) {
+    console.log('🛡️ [STREAK] Active today - protected');
+    return true;
+  }
+  
+  // Case 2: User was active yesterday - protected until protectionEndHour today
+  if (lastActiveDateString === yesterdayYMD) {
+    const isProtected = currentHour < protectionEndHour;
+    console.log(`🛡️ [STREAK] Active yesterday - protected until ${protectionEndHour}:00 (current: ${currentHour}:00) → ${isProtected}`);
+    return isProtected;
+  }
+  
+  // Case 3: Last activity was before yesterday - streak is not protected
+  console.log(`🛡️ [STREAK] Last active ${lastActiveDateString} (before yesterday) - NOT protected`);
+  return false;
+}
+
+/**
+ * Check if a user has maintained their streak for today
+ * Uses the new lenient protection window (until 11 PM the next day)
+ * @param lastActiveDateString The last active date (YYYY-MM-DD)
+ * @param timeZone Optional user timezone
+ * @param gracePeriodHours Grace period in hours (deprecated, kept for compatibility)
  * @returns True if the user's streak is still active
  */
 export function isStreakActive(
@@ -170,18 +222,16 @@ export function isStreakActive(
 ): boolean {
   if (!lastActiveDateString) return false;
   
-  const effectiveToday = getEffectiveTodayYMD(timeZone, gracePeriodHours);
-  const yesterday = getYesterdayYMD(timeZone);
-  
-  // Streak is active if last active was today or yesterday (with grace period)
-  return lastActiveDateString === effectiveToday || lastActiveDateString === yesterday;
+  // Use the new protection window logic
+  return isStreakProtected(lastActiveDateString, timeZone, STREAK_PROTECTION_END_HOUR);
 }
 
 /**
  * Check if a user has lost their streak
+ * Uses the new lenient protection window (until 11 PM the next day)
  * @param lastActiveDateString The last active date (YYYY-MM-DD)
  * @param timeZone Optional user timezone
- * @param gracePeriodHours Grace period in hours
+ * @param gracePeriodHours Grace period in hours (deprecated, kept for compatibility)
  * @returns True if the user has lost their streak
  */
 export function hasLostStreak(
@@ -191,18 +241,17 @@ export function hasLostStreak(
 ): boolean {
   if (!lastActiveDateString) return false;
   
-  const effectiveToday = getEffectiveTodayYMD(timeZone, gracePeriodHours);
-  const yesterday = getYesterdayYMD(timeZone);
-  
-  // Streak is lost if last active was before yesterday
-  return lastActiveDateString !== effectiveToday && lastActiveDateString !== yesterday;
+  // Streak is lost if it's no longer protected
+  return !isStreakProtected(lastActiveDateString, timeZone, STREAK_PROTECTION_END_HOUR);
 }
 
 /**
- * Update a user's streak based on their activity using calendar-day logic
+ * Update a user's streak based on their activity using the lenient protection window
+ * Streak is protected until 11 PM the day after last activity
+ *
  * @param currentStreakData The current streak data
  * @param userTimeZone Optional user timezone (e.g., 'Asia/Jakarta')
- * @param gracePeriodHours Grace period in hours after midnight (default: 4)
+ * @param gracePeriodHours Grace period in hours (deprecated, kept for compatibility)
  * @returns Updated streak data
  */
 export function updateStreak(
@@ -211,86 +260,69 @@ export function updateStreak(
   gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
 ): StreakData {
   const now = new Date();
-  const effectiveToday = getEffectiveTodayYMD(userTimeZone, gracePeriodHours);
+  const todayYMD = getTodayYMD(userTimeZone);
   const lastActiveDateString = currentStreakData.lastActiveDateString;
   
-  console.log('🔄 [STREAK] ========== updateStreak called ==========');
-  console.log('🔄 [STREAK] Input:', {
-    currentStreak: currentStreakData.currentStreak,
-    longestStreak: currentStreakData.longestStreak,
-    lastActiveDateString,
-    userTimeZone,
-    gracePeriodHours
+  console.log('🔄 [STREAK] updateStreak:', {
+    streak: currentStreakData.currentStreak,
+    lastActive: lastActiveDateString,
+    today: todayYMD
   });
-  console.log('🔄 [STREAK] Current time (UTC):', now.toISOString());
-  console.log('🔄 [STREAK] Effective today (YYYY-MM-DD):', effectiveToday);
   
   // If no previous activity, start a new streak
   if (!lastActiveDateString) {
-    console.log('🆕 [STREAK] No previous activity - starting new streak at 1');
+    console.log('🆕 [STREAK] Starting new streak at 1');
     return {
       currentStreak: 1,
       lastActiveDate: now,
-      lastActiveDateString: effectiveToday,
+      lastActiveDateString: todayYMD,
       longestStreak: Math.max(1, currentStreakData.longestStreak),
       streakHistory: [...currentStreakData.streakHistory, now],
     };
   }
   
-  console.log('📅 [STREAK] Last active date:', lastActiveDateString);
-  
   // Already counted for today - idempotent
-  if (lastActiveDateString === effectiveToday) {
-    console.log('✅ [STREAK] Already counted for today - no change (idempotent)');
-    // Special case: if currentStreak is 0, this is the first activity of the day
+  if (lastActiveDateString === todayYMD) {
+    // Special case: if currentStreak is 0, initialize to 1
     if (currentStreakData.currentStreak === 0) {
-      console.log('⚠️ [STREAK] Special case: currentStreak is 0, initializing to 1');
+      console.log('⚠️ [STREAK] currentStreak is 0, initializing to 1');
       return {
         currentStreak: 1,
         lastActiveDate: now,
-        lastActiveDateString: effectiveToday,
+        lastActiveDateString: todayYMD,
         longestStreak: Math.max(1, currentStreakData.longestStreak),
         streakHistory: [...currentStreakData.streakHistory, now],
       };
     }
-    console.log('🔄 [STREAK] Returning unchanged streak data');
+    console.log('✅ [STREAK] Already counted for today - no change');
     return currentStreakData;
   }
   
-  // Calculate days difference
-  const daysDiff = daysDifferenceYMD(lastActiveDateString, effectiveToday);
-  console.log('📊 [STREAK] Days difference:', daysDiff, '(lastActiveDateString -> effectiveToday)');
+  // Check if streak is still protected (within 11 PM the day after last activity)
+  const isProtected = isStreakProtected(lastActiveDateString, userTimeZone, STREAK_PROTECTION_END_HOUR);
   
   let newStreak: number;
   const newHistory = [...currentStreakData.streakHistory, now];
   
-  if (daysDiff === 1) {
-    // Consecutive day, increment streak
+  if (isProtected) {
+    // Streak is protected - user was active yesterday and it's before 11 PM today
+    // This counts as a consecutive day
     newStreak = currentStreakData.currentStreak + 1;
-    console.log('🔥 [STREAK] Consecutive day! Incrementing streak:', currentStreakData.currentStreak, '->', newStreak);
-  } else if (daysDiff <= 0) {
-    // Same day or invalid (shouldn't happen, but handle gracefully)
-    console.log('⚠️ [STREAK] Same day or invalid daysDiff:', daysDiff, '- returning unchanged');
-    return currentStreakData;
+    console.log(`🔥 [STREAK] Protected! Incrementing: ${currentStreakData.currentStreak} → ${newStreak}`);
   } else {
-    // Missed days, reset streak to 1
+    // Streak protection expired - reset to 1
     newStreak = 1;
-    console.log('💔 [STREAK] Missed', daysDiff, 'days - resetting streak to 1');
+    const daysDiff = daysDifferenceYMD(lastActiveDateString, todayYMD);
+    console.log(`💔 [STREAK] Protection expired (${daysDiff} days missed) - resetting to 1`);
   }
   
   const newLongestStreak = Math.max(newStreak, currentStreakData.longestStreak);
-  console.log('🏆 [STREAK] New longest streak:', newLongestStreak);
-  console.log('🔄 [STREAK] ========== updateStreak result ==========');
-  console.log('🔄 [STREAK] Output:', {
-    currentStreak: newStreak,
-    lastActiveDateString: effectiveToday,
-    longestStreak: newLongestStreak
-  });
+  console.log(`🔄 [STREAK] Result: streak=${newStreak}, longest=${newLongestStreak}`);
   
   return {
     currentStreak: newStreak,
     lastActiveDate: now,
-    lastActiveDateString: effectiveToday,
+    lastActiveDateString: todayYMD,
     longestStreak: newLongestStreak,
     streakHistory: newHistory,
   };

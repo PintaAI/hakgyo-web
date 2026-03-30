@@ -57,10 +57,22 @@ const response = await vocabularyApi.listSets({
 
 #### `getSet(id)`
 
-Retrieves a single vocabulary set by its ID.
+Retrieves a single vocabulary set by its ID. **Session-aware**: Returns `isLearned` status on each item for authenticated users.
 
 ```typescript
 const response = await vocabularyApi.getSet(1);
+
+if (response.success && response.data) {
+  const set = response.data;
+  console.log(`Set: ${set.title}`);
+  console.log(`Total items: ${set.itemCount}`);
+  console.log(`Learned items: ${set.learnedCount}`);
+  
+  // Each item includes isLearned status (session-aware)
+  set.items?.forEach(item => {
+    console.log(`${item.korean}: ${item.isLearned ? '✓ Learned' : '○ Not learned'}`);
+  });
+}
 ```
 
 **Parameters:**
@@ -70,6 +82,14 @@ const response = await vocabularyApi.getSet(1);
 | `id` | `number` | The unique identifier of the vocabulary set |
 
 **Returns:** `Promise<ApiResponse<VocabularySet>>`
+
+**Session-Aware Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `items[].isLearned` | `boolean` | Whether the current user has learned this item (always `false` for unauthenticated users) |
+| `learnedCount` | `number` | Count of items the current user has learned |
+| `itemCount` | `number` | Total number of items in the set |
 
 ---
 

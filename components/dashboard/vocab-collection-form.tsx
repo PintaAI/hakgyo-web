@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { saveVocabularySet } from "@/app/actions/kelas/vocabulary";
-import { VocabularyType,} from "@prisma/client";
+import { VocabularyType } from "@/lib/prisma-types";
 import { VocabItemList } from "./vocab-item-list";
 import { VocabItemForm } from "./vocab-item-form";
 import { IconPicker, } from "@/components/shared/icon-picker";

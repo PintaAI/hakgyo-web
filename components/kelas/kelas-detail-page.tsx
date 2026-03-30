@@ -2,7 +2,7 @@
 
 import {  MessageSquare, GraduationCap, Megaphone, FileText, BookOpen, Brain, BarChart3 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { KelasType, Difficulty } from "@prisma/client";
+import { KelasType, Difficulty } from "@/lib/prisma-types";
 import { useSession } from "@/components/session-provider";
 import { useKelasEnrollment } from "@/hooks/use-kelas-enrollment";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

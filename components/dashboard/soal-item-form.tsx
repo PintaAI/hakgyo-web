@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Difficulty } from "@prisma/client";
+import { Difficulty } from "@/lib/prisma-types";
 import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import NovelEditor from "@/components/novel/novel-editor";
 import { htmlToJSON } from "@/lib/novel-utils";

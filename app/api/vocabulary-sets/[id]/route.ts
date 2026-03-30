@@ -83,7 +83,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
                 name: true,
                 image: true
               }
-            }
+            },
+            progress: session?.user?.id ? {
+              where: { userId: session.user.id },
+              select: { isLearned: true }
+            } : false
           },
           orderBy: { createdAt: 'desc' }
         },
@@ -102,9 +106,23 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
       )
     }
 
+    // Transform items to include isLearned at top level
+    const itemsWithLearned = vocabularySet.items.map(item => ({
+      ...item,
+      isLearned: item.progress?.[0]?.isLearned ?? false,
+      progress: undefined
+    }));
+
+    const learnedCount = itemsWithLearned.filter(item => item.isLearned).length;
+
     return NextResponse.json({
       success: true,
-      data: vocabularySet
+      data: {
+        ...vocabularySet,
+        items: itemsWithLearned,
+        itemCount: vocabularySet._count.items,
+        learnedCount
+      }
     })
   } catch (error) {
     console.error('Error fetching vocabulary set:', error)

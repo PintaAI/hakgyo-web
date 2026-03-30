@@ -572,10 +572,18 @@ export interface VocabularySet {
       image?: string;
     };
   };
+  // Included when fetching single set with items
+  items?: VocabularyItem[];
 }
 ```
 
 A collection of vocabulary items.
+
+**Session-Aware Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `learnedCount` | `number?` | Count of items the current user has learned (requires authentication) |
+| `items` | `VocabularyItem[]?` | Items in the set, each with `isLearned` status for the current user |
 
 ### VocabularyItem
 
@@ -593,6 +601,8 @@ export interface VocabularyItem {
   collectionId?: number;
   createdAt: string;
   updatedAt: string;
+  // Session-aware: indicates if current user has learned this item
+  isLearned?: boolean;
   creator?: {
     id: string;
     name: string;
@@ -632,6 +642,7 @@ A single vocabulary item with Korean-Indonesian translations.
 | `exampleSentences` | `string[]` | Example sentences |
 | `order` | `number` | Display order |
 | `creatorId` | `string` | Creator's user ID |
+| `isLearned` | `boolean?` | **Session-aware**: Whether the current user has learned this item |
 | `collection` | `object?` | Collection details with optional `kelasVocabularySets` for class associations |
 
 ### VocabularyItemProgress
