@@ -218,7 +218,7 @@ export function isStreakProtected(
 export function isStreakActive(
   lastActiveDateString: string | null,
   timeZone?: string,
-  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
+  _gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
 ): boolean {
   if (!lastActiveDateString) return false;
   
@@ -237,7 +237,7 @@ export function isStreakActive(
 export function hasLostStreak(
   lastActiveDateString: string | null,
   timeZone?: string,
-  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
+  _gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
 ): boolean {
   if (!lastActiveDateString) return false;
   
@@ -257,7 +257,7 @@ export function hasLostStreak(
 export function updateStreak(
   currentStreakData: StreakData,
   userTimeZone?: string,
-  gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
+  _gracePeriodHours: number = DEFAULT_GRACE_PERIOD_HOURS
 ): StreakData {
   const now = new Date();
   const todayYMD = getTodayYMD(userTimeZone);
